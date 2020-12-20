@@ -1,5 +1,9 @@
 import React, { useState } from 'react';
 import './App.css';
+import CloudComponent from './CloudComponent';
+// import './Clouds.less';
+
+// const cloudPath = require("./Cloud.svg") as string;
 
 function App() {
 
@@ -84,55 +88,6 @@ function App() {
     }
     checkGameOver();
   }
-
-  /* function oldSearch(row: number, col: number, chainLength = 0, player: players, direction?: dirType) {
-    if (direction) {
-      if (activeSquares[row][col] === player) 
-        ++chainLength;
-      else return chainLength;
-    }
-    if (chainLength >= 4) return chainLength;
-    if (!direction) {
-      for (let dir of dirs) { 
-        chainLength = search(row, col, chainLength, player, dir) 
-        if (chainLength >= 4) return chainLength;
-      }
-    }
-    switch (direction) {
-      case "N":
-        if (row > 0) chainLength = search(row - 1, col, chainLength, player, "N")
-        break;
-      case "NE":
-        if (row > 0 && col < boardNums.length - 2) 
-          chainLength = search(row - 1, col + 1, chainLength, player, "NE")
-        break;
-      case "E":
-        if (col < boardNums.length - 2) 
-          chainLength = search(row, col + 1, chainLength, player, "E")
-        break;
-      case "SE":
-        if (row < boardNums.length - 2 && col < boardNums.length - 2) 
-          chainLength = search(row + 1, col + 1, chainLength, player, "SE")
-        break;
-      case "S":
-        if (row > boardNums.length) 
-          chainLength = search(row + 1, col, chainLength, player, "S")
-        break;
-      case "SW":
-        if (row > boardNums.length && col > 0) 
-          chainLength = search(row + 1, col - 1, chainLength, player, "SW")
-        break;
-      case "W":
-        if (col > 0) 
-          chainLength = search(row, col - 1, chainLength, player, "W")
-        break;
-      case "NW":
-          if (row > 0 && col > 0) 
-            chainLength = search(row - 1, col - 1, chainLength, player, "NW")
-          break;
-    }
-    return chainLength;
-  } */
 
   type nsType = "N" | "S" | undefined;
   type ewType = "E" | "W" | undefined;
