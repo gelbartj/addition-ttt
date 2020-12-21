@@ -14,20 +14,44 @@
 }
 
 .App-header {
-  background-color: #282c34;
+  background-color: #0a2353;
 /*   display: flex;
   flex-direction: column; */
   align-items: center;
   justify-content: center;
-  font-size: calc(10px + 2vmin);
+  font-size: 2em;
   color: white;
   padding: 10px;
   text-align: center;
+  font-family:'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+  font-variant: small-caps;
+  font-weight: bolder;
+  letter-spacing: 1px;
 }
 
 #board {
-  margin: 40px auto; 
+  margin: 15px auto; 
   text-align: center; 
+}
+
+#boardInstructions {
+  display: block;
+  margin: 0px;
+  height: 0;
+  text-align: center;
+  background-color: none;
+  transition: margin 0.25s, height 0.25s, background-color 0.5s, opacity 0.5s;
+}
+
+#boardInstructions.active {
+  margin-top: 10px;
+  padding: 4px;
+  height: 2em;
+  background-color:rgba(255, 255, 0, 50%);
+}
+
+#boardInstructions.hidden {
+  opacity: 0;
 }
 
 .square {
@@ -41,7 +65,7 @@
   font-size: 1.5em;
   background:rgba(255, 255, 255, 0.5);
   cursor: pointer;
-  transition: border 0.25s, padding 0.25s;
+  transition: border 0.2s, padding 0s, color 0.2s, background 0.2s;
   color: #222;
 }
 
@@ -55,31 +79,32 @@
 
 .square.valid {
   padding: 6px;
-  border: 5px dashed green;
+  border: 4px dashed green;
   color: #000;
 }
 
 .square.active {
   position: relative;
+  color: #666;
 }
 
 .square.active.o::after {
   content: "O";
   position: absolute;
-  top: 0%;
-  right: 25%;
-  font-size: 2em;
-  color:red;
+  top: -25%;
+  right: 20%;
+  font-size: 2.5em;
+  color:rgb(233, 23, 23);
   font-weight:bold;
 }
 
 .square.active.x::after {
   content: "✕";
   position: absolute;
-  top: 0%;
-  right: 25%;
-  font-size: 2em;
-  color: blue;
+  top: -25%;
+  right: 20%;
+  font-size: 2.5em;
+  color: rgb(26, 26, 224);
   font-weight:bold;
 }
 
@@ -99,9 +124,17 @@
 }
 
 button.playAgain {
-  font-size: 1.25em;
+  font-size: 1.2rem;
+  padding: 8px;
   cursor: pointer;
   margin: 10px;
+  border-radius: 5px;
+  background: #eafdff;
+  border: 2px solid darkblue;
+}
+
+button.playAgain:hover {
+  background: #ddf0f1;
 }
 
 #moveBlock {
@@ -111,6 +144,15 @@ button.playAgain {
 #moveStatus {
   padding: 10px;
   font-size: 1.5em;
+}
+
+#moveStatus.gameOver {
+  padding: 0;
+}
+
+#moveStatus.gameOver div {
+  background: rgba(255, 255, 255, 0.3);
+  padding: 8px;
 }
 
 .moveButton {
@@ -123,6 +165,10 @@ button.playAgain {
 .moveButton.active {
   background-color: #282c34;
   color: white;
+}
+
+.moveButton.active.double {
+  border: 5px solid rgb(255, 255, 0);
 }
 
 .square::after {
@@ -145,13 +191,21 @@ button.playAgain {
   transition: height 0.5s, margin 0.5s;
 }
 
-#movesSum {
+#movesResult {
   height: 1em;
   font-size: 1.2em;
 }
 
-.moveInstructions {
+#moveInstructions {
   color: #555;
+  padding: 2px;
+  transition: background-color 0.5s;
+  display: block;
+  height: 2em;
+}
+
+#moveInstructions.highlight {
+  background-color:rgba(255, 255, 0, 50%);
 }
 
 button {
@@ -161,4 +215,31 @@ button {
 body {
   background-color: #0e0afd;
   background-image: radial-gradient(circle, #eafdff 0%, #bbd5f1 70%, #9db6e4 100%);
+}
+
+.currPlayer {
+  background-color: rgba(255, 255, 255, 0.3);
+  border: 1px solid #ccc;
+  padding: 4px;
+}
+
+#pickGame {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: calc(100vh - 20px - 2em);
+}
+
+#pickGame button {
+  cursor: pointer;
+  font-size: 1.5em;
+  margin: 10px;
+  padding: 10px;
+  border-radius: 5px;
+  line-height: 1.75em;
+  background-color: #e9f6fc;
+}
+
+#pickGame button:hover {
+  background-color: #eafdff;
 }
