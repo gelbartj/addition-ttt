@@ -256,6 +256,9 @@ function App() {
 
   const pickGameBlock = <div id="pickGame">
     <div>
+      <div className="startMsg">
+        Choose one of these two games to get started!
+        </div>
     <button onClick={() => setAddGame(true)}><span style={{fontSize: '1.75em', color:'green', fontWeight:'bold'}}>+ </span>Addition game</button>
     <button onClick={() => setAddGame(false)}><span style={{fontSize: '1.75em', color:'red', fontWeight:'bold'}}>&times; </span>Multiplication game</button>
     </div>
@@ -263,6 +266,22 @@ function App() {
 
   return (
     <>
+    <div className="mathsymbols" aria-hidden="true">
+      { addGame === null && [...Array(3)].map((item, idx) => <React.Fragment key={idx}>
+      <div className="mathsymbol plus">
+      +
+      </div>
+      <div className="mathsymbol times">
+      &times;
+      </div>
+      <div className="mathsymbol minus">
+      –
+      </div>
+      <div className="mathsymbol div">
+      ÷
+      </div>
+      </React.Fragment>) }
+    </div>
       <header className="App-header">
         { addGame === null ? "Four-In-A-Row" : `Four-In-A-Row: ${ addGame ? "Addition Edition" : "Multiplication Station"}`}
       </header>
