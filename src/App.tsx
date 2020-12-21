@@ -264,6 +264,8 @@ function App() {
     </div>
     </div>
 
+  const encouragingMessages = ["Great!", "Nice choice!", "Amazing!", "That's what I was going to pick!", "You're a real mathematician!", "Now that's some real arithmetic!"];
+
   return (
     <>
     <div className="mathsymbols" aria-hidden="true">
@@ -299,7 +301,7 @@ function App() {
       </div>
       <div id="movesResult">{ (movesResult !== undefined && !gameOver) ? `${currMoves[0]} ${ addGame ? "+" : "\u2715"} ${currMoves[1]} = ${movesResult}` : ""}</div>
       </div>
-      <div id="boardInstructions" className={(currMoves.length === 2 && moveCount === 0) ? "active" : showBoardInstructions}>{(currMoves.length === 2 && moveCount === 0) ? `👉 Now make your move in a square that matches the ${addGame ? "sum" : "product"} of the numbers you picked!` : (currMoves.length === 2 ? "Great!" : "")}</div>
+      <div id="boardInstructions" className={(currMoves.length === 2 && moveCount === 0) ? "active" : showBoardInstructions}>{(currMoves.length === 2 && moveCount === 0) ? `👉 Now make your move in a square that matches the ${addGame ? "sum" : "product"} of the numbers you picked!` : (currMoves.length === 2 ? encouragingMessages[1] : "")}</div>
       <div id="board">
         
         { boardNums.map((boardRow, rowIdx) => <div key={ rowIdx }>
