@@ -285,7 +285,7 @@ function App() {
       </React.Fragment>) }
     </div>
       <header className="App-header">
-        { addGame === null ? "Four-In-A-Row" : `Four-In-A-Row: ${ addGame ? "Addition Edition" : "Multiplication Station"}`}
+        { addGame === null ? "Math Four-In-A-Row" : `Four-In-A-Row: ${ addGame ? "Addition Edition" : "Multiplication Station"}`}
       </header>
     <main>
       { addGame === null ? pickGameBlock : <>
