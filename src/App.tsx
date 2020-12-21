@@ -259,8 +259,10 @@ function App() {
       <div className="startMsg">
         Choose one of these two games to get started!
         </div>
+        <div className="gameButtons">
     <button onClick={() => setAddGame(true)}><span style={{fontSize: '1.75em', color:'green', fontWeight:'bold'}}>+ </span>Addition game</button>
     <button onClick={() => setAddGame(false)}><span style={{fontSize: '1.75em', color:'red', fontWeight:'bold'}}>&times; </span>Multiplication game</button>
+    </div>
     </div>
     </div>
 
@@ -285,7 +287,7 @@ function App() {
       </React.Fragment>) }
     </div>
       <header className="App-header">
-        { addGame === null ? "Math Four-In-A-Row" : `Four-In-A-Row: ${ addGame ? "Addition Edition" : "Multiplication Station"}`}
+        <a href="/" style={{color:'white', textDecoration: 'none'}}>{ addGame === null ? "Math Four-In-A-Row" : `Four-In-A-Row: ${ addGame ? "Addition Edition" : "Multiplication Station"}`}</a>
       </header>
     <main>
       { addGame === null ? pickGameBlock : <>

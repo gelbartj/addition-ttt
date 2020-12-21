@@ -46,8 +46,8 @@
 #boardInstructions.active {
   margin-top: 10px;
   padding: 4px;
-  height: 2em;
-  line-height:2em;
+  height:auto;
+  min-height: 2em;
   background-color:rgba(255, 255, 0, 50%);
 }
 
@@ -68,6 +68,13 @@
   cursor: pointer;
   transition: border 0.2s, padding 0s, color 0.2s, background 0.2s;
   color: #222;
+}
+
+@media only screen and (max-width: 700px) {
+  .square { 
+    font-size: 1.2em; 
+    width: 10vw;
+  }
 }
 
 .square:hover {
@@ -202,8 +209,7 @@ button.playAgain:hover {
   padding: 2px;
   transition: background-color 0.5s;
   display: block;
-  height: 2em;
-  line-height: 2em;
+  height: auto;
 }
 
 #moveInstructions.highlight {
@@ -245,6 +251,11 @@ body {
 
 #pickGame button:hover {
   background-color: #eafdff;
+}
+
+.gameButtons {
+  margin: auto;
+  text-align: center;
 }
 
 .startMsg {
