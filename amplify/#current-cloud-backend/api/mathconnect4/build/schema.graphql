@@ -1,0 +1,193 @@
+type Game {
+  id: ID!
+  roomCode: String!
+  boardNums: [Int]
+  currBoard: [String]
+  moveNums: [Int]
+  currMoves: [Boolean]
+  gameType: String
+  playerIDs: [String]
+  xUsername: String
+  oUsername: String
+  winner: String
+  createdAt: AWSDateTime!
+  updatedAt: AWSDateTime!
+}
+
+enum ModelSortDirection {
+  ASC
+  DESC
+}
+
+type ModelGameConnection {
+  items: [Game]
+  nextToken: String
+}
+
+input ModelStringInput {
+  ne: String
+  eq: String
+  le: String
+  lt: String
+  ge: String
+  gt: String
+  contains: String
+  notContains: String
+  between: [String]
+  beginsWith: String
+  attributeExists: Boolean
+  attributeType: ModelAttributeTypes
+  size: ModelSizeInput
+}
+
+input ModelIDInput {
+  ne: ID
+  eq: ID
+  le: ID
+  lt: ID
+  ge: ID
+  gt: ID
+  contains: ID
+  notContains: ID
+  between: [ID]
+  beginsWith: ID
+  attributeExists: Boolean
+  attributeType: ModelAttributeTypes
+  size: ModelSizeInput
+}
+
+input ModelIntInput {
+  ne: Int
+  eq: Int
+  le: Int
+  lt: Int
+  ge: Int
+  gt: Int
+  between: [Int]
+  attributeExists: Boolean
+  attributeType: ModelAttributeTypes
+}
+
+input ModelFloatInput {
+  ne: Float
+  eq: Float
+  le: Float
+  lt: Float
+  ge: Float
+  gt: Float
+  between: [Float]
+  attributeExists: Boolean
+  attributeType: ModelAttributeTypes
+}
+
+input ModelBooleanInput {
+  ne: Boolean
+  eq: Boolean
+  attributeExists: Boolean
+  attributeType: ModelAttributeTypes
+}
+
+input ModelSizeInput {
+  ne: Int
+  eq: Int
+  le: Int
+  lt: Int
+  ge: Int
+  gt: Int
+  between: [Int]
+}
+
+input ModelGameFilterInput {
+  id: ModelIDInput
+  roomCode: ModelStringInput
+  boardNums: ModelIntInput
+  currBoard: ModelStringInput
+  moveNums: ModelIntInput
+  currMoves: ModelBooleanInput
+  gameType: ModelStringInput
+  playerIDs: ModelStringInput
+  xUsername: ModelStringInput
+  oUsername: ModelStringInput
+  winner: ModelStringInput
+  and: [ModelGameFilterInput]
+  or: [ModelGameFilterInput]
+  not: ModelGameFilterInput
+}
+
+enum ModelAttributeTypes {
+  binary
+  binarySet
+  bool
+  list
+  map
+  number
+  numberSet
+  string
+  stringSet
+  _null
+}
+
+type Query {
+  getGame(id: ID!): Game
+  listGames(filter: ModelGameFilterInput, limit: Int, nextToken: String): ModelGameConnection
+}
+
+input CreateGameInput {
+  id: ID
+  roomCode: String!
+  boardNums: [Int]
+  currBoard: [String]
+  moveNums: [Int]
+  currMoves: [Boolean]
+  gameType: String
+  playerIDs: [String]
+  xUsername: String
+  oUsername: String
+  winner: String
+}
+
+input UpdateGameInput {
+  id: ID!
+  roomCode: String
+  boardNums: [Int]
+  currBoard: [String]
+  moveNums: [Int]
+  currMoves: [Boolean]
+  gameType: String
+  playerIDs: [String]
+  xUsername: String
+  oUsername: String
+  winner: String
+}
+
+input DeleteGameInput {
+  id: ID
+}
+
+type Mutation {
+  createGame(input: CreateGameInput!, condition: ModelGameConditionInput): Game
+  updateGame(input: UpdateGameInput!, condition: ModelGameConditionInput): Game
+  deleteGame(input: DeleteGameInput!, condition: ModelGameConditionInput): Game
+}
+
+input ModelGameConditionInput {
+  roomCode: ModelStringInput
+  boardNums: ModelIntInput
+  currBoard: ModelStringInput
+  moveNums: ModelIntInput
+  currMoves: ModelBooleanInput
+  gameType: ModelStringInput
+  playerIDs: ModelStringInput
+  xUsername: ModelStringInput
+  oUsername: ModelStringInput
+  winner: ModelStringInput
+  and: [ModelGameConditionInput]
+  or: [ModelGameConditionInput]
+  not: ModelGameConditionInput
+}
+
+type Subscription {
+  onCreateGame: Game @aws_subscribe(mutations: ["createGame"])
+  onUpdateGame: Game @aws_subscribe(mutations: ["updateGame"])
+  onDeleteGame: Game @aws_subscribe(mutations: ["deleteGame"])
+}

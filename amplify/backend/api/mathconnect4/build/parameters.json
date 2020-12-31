@@ -1,0 +1,8 @@
+{
+    "CreateAPIKey": 1,
+    "AppSyncApiName": "mathconnect4",
+    "DynamoDBBillingMode": "PAY_PER_REQUEST",
+    "DynamoDBEnableServerSideEncryption": false,
+    "S3DeploymentBucket": "amplify-amplify71467ac6839c4-staging-190413-deployment",
+    "S3DeploymentRootKey": "amplify-appsync-files/eb9af32002715183a5afa394132b4247aaff28d9"
+}
