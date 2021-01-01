@@ -13,6 +13,10 @@
   }
 }
 
+body {
+  font-family: 'Arial Rounded MT Bold';
+}
+
 .App-header {
   background-color: #0a2353;
 /*   display: flex;
@@ -23,7 +27,6 @@
   color: white;
   padding: 10px;
   text-align: center;
-  font-family:'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
   font-variant: small-caps;
   font-weight: bolder;
   letter-spacing: 1px;
@@ -45,7 +48,7 @@
 
 #boardInstructions.active {
   margin-top: 10px;
-  padding: 4px;
+  padding: 10px;
   height:1.5em;
   line-height:1.5em;
   background-color:rgba(255, 255, 0, 50%);
@@ -60,6 +63,19 @@
   background: none;
   color: blue;
   border: 0;
+}
+
+#moveInstructions {
+  color: #555;
+  padding: 5px;
+  transition: background-color 0.5s;
+  display: block;
+  height: auto;
+  line-height:1.5em;
+}
+
+#moveInstructions.highlight {
+  background-color:rgba(255, 255, 0, 50%);
 }
 
 ul.instructions {
@@ -86,13 +102,18 @@ ul.instructions {
   width: 3em;
   text-align: center;
   border: 0;
-  box-shadow: rgb(97, 92, 133) 2px 2px 3px;
-  margin: 3px;
+  background-color: rgba(255, 255, 255, 0.7);
   font-size: 1.5em;
-  background:rgba(255, 255, 255, 0.5);
   cursor: pointer;
   transition: border 0.2s, padding 0s, color 0.2s, background 0.2s;
   color: #222;
+  font-weight: bold;
+}
+
+.boardRow:nth-child(even) .square:nth-child(odd),
+.boardRow:nth-child(odd) .square:nth-child(even) {
+  background:rgb(239, 226, 46);
+  font-weight: bold;
 }
 
 @media only screen and (max-width: 700px) {
@@ -164,6 +185,12 @@ ul.instructions {
   color: grey;
 }
 
+.hideHints {
+  color: blue;
+  font-weight: bold;
+  cursor: pointer;
+}
+
 button.playAgain {
   font-size: 1.2rem;
   padding: 8px;
@@ -185,6 +212,7 @@ button.playAgain:hover {
 #moveStatus {
   padding: 10px;
   font-size: 1.5em;
+  text-align: center;
 }
 
 #moveStatus.gameOver {
@@ -197,10 +225,17 @@ button.playAgain:hover {
 }
 
 .moveButton {
-  font-size: 1.5em;
+  font-size: 1.3em;
   margin: 5px;
   cursor: pointer;
   transition: background-color 0.5s, color 0.25s;
+  border-radius: 10px;
+  width: 2em;
+  padding: 5px 0;
+}
+
+.moveButton:hover {
+  background-color: #fff;
 }
 
 .moveButton.active {
@@ -236,20 +271,19 @@ button.playAgain:hover {
 #movesResult {
   height: 1em;
   font-size: 1.2em;
+  margin: 5px auto;
+  display: inline-block;
+  background: rgba(255, 255, 255, 50%);
+  padding: 7px;
 }
 
-#moveInstructions {
-  color: #555;
-  padding: 2px;
-  transition: background-color 0.5s;
-  display: block;
-  height: auto;
-  line-height:1.5em;
+#movesResult.hidden {
+  background: none;
+  height: 0;
+  padding: 0;
+  margin: 0;
 }
 
-#moveInstructions.highlight {
-  background-color:rgba(255, 255, 0, 50%);
-}
 
 @media only screen and (max-width: 700px) {
   #moveInstructions {
@@ -262,14 +296,15 @@ button {
 }
 
 body {
-  background-color: #0e0afd;
+  background-color: #eafdff;
   background-image: radial-gradient(circle, #eafdff 0%, #bbd5f1 70%, #9db6e4 100%);
 }
 
 .currPlayer {
   background-color: rgba(255, 255, 255, 0.3);
   border: 1px solid #ccc;
-  padding: 4px;
+  padding: 2px 5px;
+  font-size: 1.5em;
 }
 
 #pickGame {

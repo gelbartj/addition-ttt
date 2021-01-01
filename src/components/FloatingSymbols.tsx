@@ -1,8 +1,10 @@
+import React from "react";
+
 interface FloatingSymbolsProps {
     show: boolean
 }
 
-const FloatingSymbols: React.FC<FloatingSymbolsProps> = ({ show }) => {
+export const FloatingSymbols: React.FC<FloatingSymbolsProps> = ({ show }) => {
     return (
       <div className="mathsymbols" aria-hidden="true">
         {show &&

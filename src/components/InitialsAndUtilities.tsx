@@ -120,7 +120,7 @@ function nonRecSearch(
         else breakFlag = true;
         break;
       case "S":
-        if (row > boardNums.length) row += 1;
+        if (row > activeSquares.length) row += 1;
         else breakFlag = true;
         break;
     }

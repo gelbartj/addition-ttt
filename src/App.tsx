@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import "./App.css";
 import { Game } from "./components/Game";
 import { PickGameBlock } from "./components/PickGameBlock";
+import { FloatingSymbols } from "./components/FloatingSymbols";
 
 export type AppStatus = "ADD" | "MULT" | "ALG" | null;
   
@@ -28,7 +29,7 @@ function App() {
           <PickGameBlock setAppStatus={setAppStatus} />
         ) : (
           <>
-            <Game appStatus={appStatus} setAppStatus={setAppStatus} />
+            <Game appStatus={appStatus} />
           </>
         )}
       </main>

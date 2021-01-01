@@ -1,4 +1,4 @@
-import { useRef, useState, useReducer } from "react";
+import { useRef, useState, useReducer, useEffect } from "react";
 import { AppStatus } from "../App";
 import {
   addBoard,
@@ -65,6 +65,7 @@ export const initialState = {
   lastMoved: [] as typeof startMove,
   lockedNumber: null as number | null,
   boardInstructions: "",
+  hideHints: false
 };
 
 export const actions = {
@@ -73,6 +74,7 @@ export const actions = {
   RESET_GAME: "RESET_GAME",
   GAME_OVER: "GAME_OVER",
   TOGGLE_PLAYER: "TOGGLE_PLAYER",
+  UPDATE_SQUARE_STATUS: "UPDATE_SQUARE_STATUS"
 } as const;
 
 interface AnyObj {
@@ -102,16 +104,11 @@ interface UpdateAction {
 export type Action = PayloadAction | NoPayloadAction | UpdateAction;
 
 export const Game: React.FC<GameProps> = ({ appStatus }) => {
-  const boardRef = useRef<HTMLDivElement>(null);
+  
+const [gameState, dispatch] = useReducer(reducer, initialState);
+
 
   const hideMessageTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const initialMsgState = {
-    boardInstructions: "",
-    showBoardInstructions: false,
-    moveInstructions: "",
-    highlightMoveInstructions: false,
-  };
 
   function reducer(
     state: typeof initialState,
@@ -119,20 +116,17 @@ export const Game: React.FC<GameProps> = ({ appStatus }) => {
   ): typeof initialState {
     switch (action.type) {
       case actions.ADD_CLICKED_MOVE:
-        let newState = {
+        return {
           ...state,
           currMoves: state.currMoves.concat(action.payload.move),
           currError: "",
-        };
-        const [boardInstructions, showBoardInstructions] = getBoardInstructions(
-          newState.currMoves as number[],
-          newState.moveCount as number
-        );
-        return {
-          ...newState,
-          boardInstructions: boardInstructions,
-          showBoardInstructions: showBoardInstructions,
-        };
+        }
+      case actions.UPDATE_SQUARE_STATUS:
+          return {
+              ...state,
+              activeSquares: action.payload.activeSquares,
+              moveCount: ++state.moveCount
+          }
       case UPDATE_STATE_VALUE:
         return {
           ...state,
@@ -175,42 +169,40 @@ export const Game: React.FC<GameProps> = ({ appStatus }) => {
     }
   }
 
-  const [gameState, dispatch] = useReducer(reducer, initialState);
+  useEffect(() => {
+    const [boardInstructions, showBoardInstructions] = getBoardInstructions()
+    dispatch({ type: UPDATE_STATE_VALUE, payload: {
+        boardInstructions: boardInstructions,
+        showBoardInstructions: showBoardInstructions
+    } })
+  }, [gameState.activeSquares, gameState.currMoves]);
 
-  function getBoardInstructions(
-    currMovesArg: number[],
-    moveCountArg: number,
-    activeSquaresArg?: typeof gameState.activeSquares
-  ): [string, "" | "active" | "hidden"] {
-    // inefficient duplication of logic
-    let newMovesResult =
-      appStatus === "ADD"
-        ? currMovesArg[0] + currMovesArg[1]
-        : currMovesArg[0] * currMovesArg[1];
-    if (!activeSquaresArg) activeSquaresArg = gameState.activeSquares;
+  function getBoardInstructions(): [string, "" | "active" | "hidden"] {
+
+    // Check for squares with values matching movesResult and that are empty (no X or O)
     let noMoves = !gameState.currBoard
       .flat()
-      .map((num) => num === newMovesResult)
+      .map((num) => num === movesResult)
       .some((val, idx) => {
         return (
           val &&
-          activeSquaresArg![Math.floor(idx / gameState.activeSquares.length)][
+          gameState.activeSquares![Math.floor(idx / gameState.activeSquares.length)][
             idx % gameState.activeSquares[0].length
           ] === null
         );
       });
 
-    if (currMovesArg.length === 2 && moveCountArg === 0) {
+    if (gameState.currMoves.length === 2 && gameState.moveCount === 0) {
       return [
         `👉 Now make your move in a square that matches the ${
           appStatus === "ADD" ? "sum" : "product"
         } of the numbers you picked!`,
         "active",
       ];
-    } else if (moveCountArg === 1 && !noMoves) {
+    } else if (gameState.moveCount === 1 && !noMoves) {
       return ["Nice choice!", "active"];
       // set timeout to disappear after 5 seconds
-    } else if (currMovesArg.length === 2 && noMoves) {
+    } else if (gameState.currMoves.length === 2 && noMoves) {
       return [
         "Create a new number combination using the buttons above to enable new valid moves",
         "active",
@@ -258,8 +250,8 @@ export const Game: React.FC<GameProps> = ({ appStatus }) => {
 
   let movesResult = appStatus ? movesSum : movesProduct;
 
-  function resetGame() {
-    dispatch({ type: actions.RESET_GAME });
+  function resetGame(random: boolean = false) {
+    dispatch({ type: actions.RESET_GAME, payload: { newBoard: random } });
   }
 
   return (
@@ -279,7 +271,7 @@ export const Game: React.FC<GameProps> = ({ appStatus }) => {
         appStatus={appStatus}
         dispatch={dispatch}
       />
-      <Board />
+      <Board state={gameState} movesResult={movesResult} dispatch={dispatch} checkGameOver={checkGameOver} />
     </>
   );
 };

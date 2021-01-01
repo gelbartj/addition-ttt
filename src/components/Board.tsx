@@ -1,169 +1,74 @@
-export const Board = (props) => {
-  function updateBoardInstructions(
-    currMovesArg: number[],
-    moveCountArg: number,
-    activeSquaresArg?: typeof activeSquares
-  ) {
-    // inefficient duplication of logic
-    let newMovesResult = addGame
-      ? currMovesArg[0] + currMovesArg[1]
-      : currMovesArg[0] * currMovesArg[1];
-    if (!activeSquaresArg) activeSquaresArg = activeSquares;
-    let noMoves = !boardNums
-      .flat()
-      .map((num) => num === newMovesResult)
-      .some((val, idx) => {
-        return (
-          val &&
-          activeSquaresArg![Math.floor(idx / activeSquares.length)][
-            idx % activeSquares[0].length
-          ] === null
-        );
-      });
+import { useRef } from "react";
+import { Action, actions, initialState, UPDATE_STATE_VALUE } from "./Game";
 
-    if (currMovesArg.length === 2 && moveCountArg === 0) {
-      setShowBoardInstructions("active");
-      setBoardInstructions(
-        `👉 Now make your move in a square that matches the ${
-          addGame ? "sum" : "product"
-        } of the numbers you picked!`
-      );
-    } else if (moveCountArg === 1 && !noMoves) {
-      setShowBoardInstructions("active");
-      setBoardInstructions("Nice choice!");
-      // set timeout to disappear after 5 seconds
-    } else if (currMovesArg.length === 2 && noMoves) {
-      setShowBoardInstructions("active");
-      setBoardInstructions(
-        "Create a new number combination using the buttons above to enable new valid moves"
-      );
-    } else {
-      setShowBoardInstructions("hidden");
-      setBoardInstructions("");
-    }
-  }
+interface BoardProps {
+    state: typeof initialState,
+    dispatch: React.Dispatch<Action>,
+    movesResult: number | undefined,
+    checkGameOver: () => boolean
+}
 
-  type nsType = "N" | "S" | undefined;
-  type ewType = "E" | "W" | undefined;
-
-  function nonRecSearch(
-    row: number,
-    col: number,
-    player: players,
-    nsDir?: nsType,
-    ewDir?: ewType
-  ): number[][] {
-    if (!nsDir && !ewDir) {
-      return [];
-    }
-    let winChain: number[][] = [];
-    let breakFlag = false;
-    while (activeSquares[row][col] === player && !breakFlag) {
-      winChain.push([row, col]);
-      if (winChain.length >= 4) {
-        return winChain;
-      }
-      switch (nsDir) {
-        case "N":
-          if (row > 0) row -= 1;
-          else breakFlag = true;
-          break;
-        case "S":
-          if (row > boardNums.length) row += 1;
-          else breakFlag = true;
-          break;
-      }
-      switch (ewDir) {
-        case "E":
-          if (col < boardNums.length - 2) {
-            col += 1;
-          } else breakFlag = true;
-          break;
-        case "W":
-          if (col > 0) {
-            col -= 1;
-          } else breakFlag = true;
-          break;
-      }
-    }
-    return winChain;
-  }
-
-  function search(row = 0, col = 0, player: players) {
-    let winChain: number[][] = [];
-    for (let ns of ["N", "S", undefined] as nsType[]) {
-      for (let ew of ["E", "W", undefined] as ewType[]) {
-        if (!ns && !ew) {
-          continue;
-        }
-        winChain = nonRecSearch(row, col, player, ns, ew);
-        if (winChain.length >= 4) return winChain;
-      }
-    }
-    return winChain;
-  }
+export const Board: React.FC<BoardProps> = (props) => {
 
   function setSquareStatus(row: number, col: number) {
-    if (gameOver) return;
-    if (currMoves[0] === undefined || currMoves[0] === undefined) {
-      setCurrError(
+    if (props.state.gameOver) return;
+    if (props.state.currMoves[0] === undefined || props.state.currMoves[0] === undefined) {
+      props.dispatch({ type: UPDATE_STATE_VALUE, payload: { currError: 
         "Please make a move first (select two numbers in the Moves row above the grid)"
-      );
+      }});
       return;
-    } else if (boardNums[row][col] !== movesResult || activeSquares[row][col]) {
-      setCurrError("Please select a valid square (with dashed green outline)");
+    } else if (props.state.currBoard[row][col] !== props.movesResult || props.state.activeSquares[row][col]) {
+      props.dispatch({ type: UPDATE_STATE_VALUE, payload: { currError: "Please select a valid square (with dashed green outline)"}});
       return;
     }
-    setCurrError("");
-    let activeSquaresCopy = [...activeSquares];
-    activeSquaresCopy[row][col] = currPlayer;
-    setActiveSquares(activeSquaresCopy);
-    setMoveCount((mc) => {
-      let newMc = ++mc;
-      updateBoardInstructions(
-        currMoves as number[],
-        newMc as number,
-        activeSquaresCopy
-      );
-      return newMc;
-    });
-    togglePlayer();
-    checkGameOver();
-    setLockedNumber(null);
+    props.dispatch({ type: actions.RESET_ERROR });
+    let activeSquaresCopy = [...props.state.activeSquares];
+    activeSquaresCopy[row][col] = props.state.currPlayer;
+    props.dispatch({ type: actions.UPDATE_SQUARE_STATUS, payload: { activeSquares: activeSquaresCopy }})
+    props.dispatch({ type: actions.TOGGLE_PLAYER });
+    props.checkGameOver();
+    props.dispatch({ type: UPDATE_STATE_VALUE, payload: { lockedNumber: null }});
   }
+
+  const boardRef = useRef<HTMLDivElement>(null);
+  const HideHints = () => (
+    <button className="hideHints" onClick={() => 
+        props.dispatch({type: UPDATE_STATE_VALUE, payload: 
+            { hideHints: true }})}><sup>X</sup></button>
+    )
 
   return (
     <>
-      <div id="boardInstructions" className={showBoardInstructions}>
-        {boardInstructions}
+      <div id="boardInstructions" className={props.state.hideHints ? "hidden" : props.state.showBoardInstructions}>
+        {props.state.boardInstructions}<HideHints />
       </div>
       <div id="board" ref={boardRef}>
-        {boardNums.map((boardRow, rowIdx) => (
-          <div key={rowIdx}>
+        {props.state.currBoard.map((boardRow, rowIdx) => (
+          <div className="boardRow" key={rowIdx}>
             {boardRow.map((boardNum, colIdx) => (
               <button
                 key={colIdx}
                 className={`
                         square ${
-                          movesResult === boardNum &&
-                          !activeSquares[rowIdx][colIdx]
+                          props.movesResult === boardNum &&
+                          !props.state.activeSquares[rowIdx][colIdx]
                             ? "valid"
                             : ""
                         }
                         ${
-                          activeSquares[rowIdx][colIdx]
-                            ? activeSquares[rowIdx][colIdx] === "X"
+                          props.state.activeSquares[rowIdx][colIdx]
+                            ? props.state.activeSquares[rowIdx][colIdx] === "X"
                               ? "active x"
                               : "active o"
                             : ""
                         }
                         ${
-                          winSquares.some(
+                          props.state.winSquares.some(
                             (winSquare) =>
                               winSquare[0] === rowIdx && winSquare[1] === colIdx
                           )
                             ? "winner"
-                            : gameOver
+                            : props.state.gameOver
                             ? "inactive"
                             : ""
                         }

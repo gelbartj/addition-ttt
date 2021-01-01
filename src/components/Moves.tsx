@@ -92,7 +92,7 @@ export const Moves: React.FC<MovesProps> = (props) => {
                       ))}
                 </div>
               </div>
-              <div id="movesResult">
+              <div id="movesResult" className={props.movesResult ? "" : "hidden"}>
                 {props.movesResult !== undefined && !props.state.gameOver
                   ? `${props.state.currMoves[0]} ${props.appStatus ? "+" : "\u2715"} ${
                       props.state.currMoves[1]
