@@ -221,6 +221,7 @@ button.playAgain:hover {
   height: 0px;
   transition: height 0.5s, margin 0.5s;
   background-color: #be4f4f;
+  text-align: center;
 }
 
 #moveError.active {
