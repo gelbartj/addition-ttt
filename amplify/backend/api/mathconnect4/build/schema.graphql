@@ -3,13 +3,15 @@ type Game {
   roomCode: String!
   boardNums: [Int]
   currBoard: [String]
-  moveNums: [Int]
-  currMoves: [Boolean]
+  moveCount: Int
+  currMoves: [Int]
   gameType: String
   playerIDs: [String]
   xUsername: String
   oUsername: String
   winner: String
+  winSquares: [Int]
+  currPlayer: String
   createdAt: AWSDateTime!
   updatedAt: AWSDateTime!
 }
@@ -102,13 +104,15 @@ input ModelGameFilterInput {
   roomCode: ModelStringInput
   boardNums: ModelIntInput
   currBoard: ModelStringInput
-  moveNums: ModelIntInput
-  currMoves: ModelBooleanInput
+  moveCount: ModelIntInput
+  currMoves: ModelIntInput
   gameType: ModelStringInput
   playerIDs: ModelStringInput
   xUsername: ModelStringInput
   oUsername: ModelStringInput
   winner: ModelStringInput
+  winSquares: ModelIntInput
+  currPlayer: ModelStringInput
   and: [ModelGameFilterInput]
   or: [ModelGameFilterInput]
   not: ModelGameFilterInput
@@ -137,13 +141,15 @@ input CreateGameInput {
   roomCode: String!
   boardNums: [Int]
   currBoard: [String]
-  moveNums: [Int]
-  currMoves: [Boolean]
+  moveCount: Int
+  currMoves: [Int]
   gameType: String
   playerIDs: [String]
   xUsername: String
   oUsername: String
   winner: String
+  winSquares: [Int]
+  currPlayer: String
 }
 
 input UpdateGameInput {
@@ -151,13 +157,15 @@ input UpdateGameInput {
   roomCode: String
   boardNums: [Int]
   currBoard: [String]
-  moveNums: [Int]
-  currMoves: [Boolean]
+  moveCount: Int
+  currMoves: [Int]
   gameType: String
   playerIDs: [String]
   xUsername: String
   oUsername: String
   winner: String
+  winSquares: [Int]
+  currPlayer: String
 }
 
 input DeleteGameInput {
@@ -174,13 +182,15 @@ input ModelGameConditionInput {
   roomCode: ModelStringInput
   boardNums: ModelIntInput
   currBoard: ModelStringInput
-  moveNums: ModelIntInput
-  currMoves: ModelBooleanInput
+  moveCount: ModelIntInput
+  currMoves: ModelIntInput
   gameType: ModelStringInput
   playerIDs: ModelStringInput
   xUsername: ModelStringInput
   oUsername: ModelStringInput
   winner: ModelStringInput
+  winSquares: ModelIntInput
+  currPlayer: ModelStringInput
   and: [ModelGameConditionInput]
   or: [ModelGameConditionInput]
   not: ModelGameConditionInput

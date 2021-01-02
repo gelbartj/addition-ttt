@@ -4,11 +4,14 @@ type Game @model
   roomCode: String!
   boardNums: [Int]
   currBoard: [String] # X, O, or blank
-  moveNums: [Int]
-  currMoves: [Boolean]
+  moveCount: Int
+  currMoves: [Int]
   gameType: String # ADD, MULT, or ALG
   playerIDs: [String] # emails
   xUsername: String
   oUsername: String
   winner: String #X, O, or blank
+  winSquares: [Int]
+  currPlayer: String # X or O
 }
+

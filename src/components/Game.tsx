@@ -1,5 +1,5 @@
-import { useRef, useState, useReducer, useEffect } from "react";
-import { AppStatus } from "../App";
+import { useEffect, useReducer } from "react";
+import { GameChoice } from "../App";
 import {
   addBoard,
   emptyStatus,
@@ -11,6 +11,8 @@ import {
 import { ErrorBanner } from "./ErrorBanner";
 import { Moves } from "./Moves";
 import { Board } from "./Board";
+import { API, graphqlOperation } from "aws-amplify";
+import { updateGame } from "../graphql/mutations";
 
 interface GameOverBlockProps {
   message?: string;
@@ -45,7 +47,8 @@ const CurrPlayerBlock: React.FC<CurrPlayerBlockProps> = ({ currPlayer }) => (
 );
 
 interface GameProps {
-  appStatus: AppStatus;
+  gameChoice: GameChoice;
+  gameObj?: any;
 }
 
 let startPlayer: Players = "X";
@@ -65,7 +68,7 @@ export const initialState = {
   lastMoved: [] as typeof startMove,
   lockedNumber: null as number | null,
   boardInstructions: "",
-  hideHints: false
+  hideHints: false,
 };
 
 export const actions = {
@@ -74,7 +77,7 @@ export const actions = {
   RESET_GAME: "RESET_GAME",
   GAME_OVER: "GAME_OVER",
   TOGGLE_PLAYER: "TOGGLE_PLAYER",
-  UPDATE_SQUARE_STATUS: "UPDATE_SQUARE_STATUS"
+  UPDATE_SQUARE_STATUS: "UPDATE_SQUARE_STATUS",
 } as const;
 
 interface AnyObj {
@@ -103,12 +106,9 @@ interface UpdateAction {
 
 export type Action = PayloadAction | NoPayloadAction | UpdateAction;
 
-export const Game: React.FC<GameProps> = ({ appStatus }) => {
-  
-const [gameState, dispatch] = useReducer(reducer, initialState);
-
-
-  const hideMessageTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+export const Game: React.FC<GameProps> = ({ gameChoice, gameObj }) => {
+  const [gameState, dispatch] = useReducer(reducer, initialState);
+  // const hideMessageTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   function reducer(
     state: typeof initialState,
@@ -120,13 +120,13 @@ const [gameState, dispatch] = useReducer(reducer, initialState);
           ...state,
           currMoves: state.currMoves.concat(action.payload.move),
           currError: "",
-        }
+        };
       case actions.UPDATE_SQUARE_STATUS:
-          return {
-              ...state,
-              activeSquares: action.payload.activeSquares,
-              moveCount: ++state.moveCount
-          }
+        return {
+          ...state,
+          activeSquares: action.payload.activeSquares,
+          moveCount: ++state.moveCount,
+        };
       case UPDATE_STATE_VALUE:
         return {
           ...state,
@@ -146,7 +146,7 @@ const [gameState, dispatch] = useReducer(reducer, initialState);
             ? makeBoardNums(
                 state.currBoard.length,
                 state.currBoard[0].length,
-                appStatus
+                gameChoice
               )
             : state.currBoard,
         };
@@ -170,46 +170,80 @@ const [gameState, dispatch] = useReducer(reducer, initialState);
   }
 
   useEffect(() => {
-    const [boardInstructions, showBoardInstructions] = getBoardInstructions()
-    dispatch({ type: UPDATE_STATE_VALUE, payload: {
-        boardInstructions: boardInstructions,
-        showBoardInstructions: showBoardInstructions
-    } })
-  }, [gameState.activeSquares, gameState.currMoves]);
+    async function updateGameWrapper(state: typeof gameState) {
+      return await API.graphql(
+        graphqlOperation(updateGame, {
+          input: {
+            id: gameObj.id,
+            boardNums: state.currBoard.flat(),
+            currBoard: state.activeSquares.flat(),
+            currMoves: state.currMoves,
+            winSquares: state.winSquares.flat(),
+            currPlayer: state.currPlayer,
+            gameType: gameChoice
+          },
+        })
+      );
+    }
 
-  function getBoardInstructions(): [string, "" | "active" | "hidden"] {
+    updateGameWrapper(gameState).then((e) => console.log("Successfully updated: ", e))
+    .catch((e) => console.error(e));
+  }, [gameState, gameChoice, gameObj.id]);
 
+  let movesSum =
+    gameState.currMoves.length === 2 &&
+    gameState.currMoves[0] !== undefined &&
+    gameState.currMoves[1] !== undefined
+      ? gameState.currMoves[0] + gameState.currMoves[1]
+      : undefined;
+
+  let movesProduct =
+    gameState.currMoves.length === 2 &&
+    gameState.currMoves[0] !== undefined &&
+    gameState.currMoves[1] !== undefined
+      ? gameState.currMoves[0] * gameState.currMoves[1]
+      : undefined;
+
+  let movesResult = gameChoice ? movesSum : movesProduct;
+
+  function updateBoardInstructions() {
     // Check for squares with values matching movesResult and that are empty (no X or O)
+    let boardInstructions = "";
+    let showBoardInstructions: "" | "hidden" | "active" = "hidden";
     let noMoves = !gameState.currBoard
       .flat()
       .map((num) => num === movesResult)
       .some((val, idx) => {
         return (
           val &&
-          gameState.activeSquares![Math.floor(idx / gameState.activeSquares.length)][
-            idx % gameState.activeSquares[0].length
-          ] === null
+          gameState.activeSquares![
+            Math.floor(idx / gameState.activeSquares.length)
+          ][idx % gameState.activeSquares[0].length] === null
         );
       });
 
     if (gameState.currMoves.length === 2 && gameState.moveCount === 0) {
-      return [
-        `👉 Now make your move in a square that matches the ${
-          appStatus === "ADD" ? "sum" : "product"
-        } of the numbers you picked!`,
-        "active",
-      ];
+      boardInstructions = `👉  Now make your move in a square that matches the ${
+        gameChoice === "ADD" ? "sum" : "product"
+      } of the numbers you picked!`;
+      showBoardInstructions = "active";
     } else if (gameState.moveCount === 1 && !noMoves) {
-      return ["Nice choice!", "active"];
+      boardInstructions = "Nice choice!";
+      showBoardInstructions = "active";
       // set timeout to disappear after 5 seconds
     } else if (gameState.currMoves.length === 2 && noMoves) {
-      return [
-        "Create a new number combination using the buttons above to enable new valid moves",
-        "active",
-      ];
-    } else {
-      return ["", "hidden"];
+      boardInstructions =
+        "Create a new number combination using the buttons above to enable new valid moves";
+      showBoardInstructions = "active";
     }
+
+    dispatch({
+      type: UPDATE_STATE_VALUE,
+      payload: {
+        boardInstructions: boardInstructions,
+        showBoardInstructions: showBoardInstructions,
+      },
+    });
   }
 
   function checkGameOver() {
@@ -234,22 +268,6 @@ const [gameState, dispatch] = useReducer(reducer, initialState);
     return false;
   }
 
-  let movesSum =
-    gameState.currMoves.length === 2 &&
-    gameState.currMoves[0] !== undefined &&
-    gameState.currMoves[1] !== undefined
-      ? gameState.currMoves[0] + gameState.currMoves[1]
-      : undefined;
-
-  let movesProduct =
-    gameState.currMoves.length === 2 &&
-    gameState.currMoves[0] !== undefined &&
-    gameState.currMoves[1] !== undefined
-      ? gameState.currMoves[0] * gameState.currMoves[1]
-      : undefined;
-
-  let movesResult = appStatus ? movesSum : movesProduct;
-
   function resetGame(random: boolean = false) {
     dispatch({ type: actions.RESET_GAME, payload: { newBoard: random } });
   }
@@ -268,10 +286,17 @@ const [gameState, dispatch] = useReducer(reducer, initialState);
         state={gameState}
         moves={moves}
         movesResult={movesResult}
-        appStatus={appStatus}
+        gameChoice={gameChoice}
         dispatch={dispatch}
+        updateBoardInstructions={updateBoardInstructions}
       />
-      <Board state={gameState} movesResult={movesResult} dispatch={dispatch} checkGameOver={checkGameOver} />
+      <Board
+        state={gameState}
+        movesResult={movesResult}
+        dispatch={dispatch}
+        checkGameOver={checkGameOver}
+        updateBoardInstructions={updateBoardInstructions}
+      />
     </>
   );
 };

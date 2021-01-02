@@ -9,13 +9,15 @@ export const onCreateGame = /* GraphQL */ `
       roomCode
       boardNums
       currBoard
-      moveNums
+      moveCount
       currMoves
       gameType
       playerIDs
       xUsername
       oUsername
       winner
+      winSquares
+      currPlayer
       createdAt
       updatedAt
     }
@@ -28,13 +30,15 @@ export const onUpdateGame = /* GraphQL */ `
       roomCode
       boardNums
       currBoard
-      moveNums
+      moveCount
       currMoves
       gameType
       playerIDs
       xUsername
       oUsername
       winner
+      winSquares
+      currPlayer
       createdAt
       updatedAt
     }
@@ -47,13 +51,15 @@ export const onDeleteGame = /* GraphQL */ `
       roomCode
       boardNums
       currBoard
-      moveNums
+      moveCount
       currMoves
       gameType
       playerIDs
       xUsername
       oUsername
       winner
+      winSquares
+      currPlayer
       createdAt
       updatedAt
     }

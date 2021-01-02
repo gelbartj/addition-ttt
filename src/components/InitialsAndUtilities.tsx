@@ -1,4 +1,4 @@
-import { AppStatus } from "../App";
+import { GameChoice } from "../App";
 
 export type Players = "X" | "O";
 type SquareVal = Players | null;
@@ -49,8 +49,8 @@ const makeMultBoardRange = () => {
 
 const multBoardRange = makeMultBoardRange();
 
-function makeBoardRow(cols: number, appStatus: AppStatus) {
-  if (appStatus === null) {
+function makeBoardRow(cols: number, gameChoice: GameChoice) {
+  if (gameChoice === null) {
     return [];
   }
 
@@ -60,10 +60,10 @@ function makeBoardRow(cols: number, appStatus: AppStatus) {
     // Inefficient but immaterial for such a small array.
     // Testing on 100 million rows, average 6.87 loops was needed.
     rowSet.add(
-      (appStatus === "ADD" ? addBoardRange : multBoardRange)[
+      (gameChoice === "ADD" ? addBoardRange : multBoardRange)[
         Math.floor(
           Math.random() *
-            (appStatus === "ADD" ? addBoardRange : multBoardRange).length
+            (gameChoice === "ADD" ? addBoardRange : multBoardRange).length
         )
       ]
     );
@@ -72,10 +72,10 @@ function makeBoardRow(cols: number, appStatus: AppStatus) {
 }
 
   // Set up this way instead of an array of fewer objects to allow for direct lookup without search
-export function makeBoardNums(rows: number, cols: number, appStatus: AppStatus) {
+export function makeBoardNums(rows: number, cols: number, gameChoice: GameChoice) {
   let newBoard: number[][] = [...Array(rows)];
   for (let i = 0; i < rows; ++i) {
-    newBoard[i] = makeBoardRow(rows, appStatus);
+    newBoard[i] = makeBoardRow(rows, gameChoice);
   }
   return newBoard;
 }
@@ -154,4 +154,15 @@ export function search(row = 0, col = 0, activeSquares: SquareVal[][]) {
     }
   }
   return winChain;
+}
+
+export function makeRoomCode() {
+  const CODE_LENGTH = 6; // 2.17 billion combinations
+  const validChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
+  let code = "";
+
+  for (let i = 0; i < CODE_LENGTH; ++i) {
+    code += validChars[Math.floor(Math.random() * validChars.length)];
+  }
+  return code;
 }

@@ -9,13 +9,15 @@ export const getGame = /* GraphQL */ `
       roomCode
       boardNums
       currBoard
-      moveNums
+      moveCount
       currMoves
       gameType
       playerIDs
       xUsername
       oUsername
       winner
+      winSquares
+      currPlayer
       createdAt
       updatedAt
     }
@@ -33,13 +35,15 @@ export const listGames = /* GraphQL */ `
         roomCode
         boardNums
         currBoard
-        moveNums
+        moveCount
         currMoves
         gameType
         playerIDs
         xUsername
         oUsername
         winner
+        winSquares
+        currPlayer
         createdAt
         updatedAt
       }

@@ -1,10 +1,10 @@
-import { AppStatus } from "../App";
+import { GameChoice } from "../App";
 
 interface PickGameBlockProps {
-    setAppStatus: React.Dispatch<React.SetStateAction<AppStatus>>
+    setGameChoice: React.Dispatch<React.SetStateAction<GameChoice>>
 }
 
-export const PickGameBlock: React.FC<PickGameBlockProps> = ({ setAppStatus }) => (
+export const PickGameBlock: React.FC<PickGameBlockProps> = ({ setGameChoice }) => (
     <div id="pickGame">
       <div>
         <div className="startMsg">
@@ -13,7 +13,7 @@ export const PickGameBlock: React.FC<PickGameBlockProps> = ({ setAppStatus }) =>
         <div className="gameButtons">
           <button
             onClick={() => {
-              setAppStatus("ADD");
+              setGameChoice("ADD");
             }}
           >
             <span
@@ -25,7 +25,7 @@ export const PickGameBlock: React.FC<PickGameBlockProps> = ({ setAppStatus }) =>
           </button>
           <button
             onClick={() => {
-              setAppStatus("MULT");
+              setGameChoice("MULT");
             }}
           >
             <span
