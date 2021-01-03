@@ -2,16 +2,22 @@ type Game @model
   @auth(rules: [{ allow: public }]) {
   id: ID!
   roomCode: String!
-  boardNums: [Int]
-  currBoard: [String] # X, O, or blank
+  currBoard: [Int]
+  activeSquares: [String] # X, O, or blank
   moveCount: Int
   currMoves: [Int]
+  lockedNumber: Int
   gameType: String # ADD, MULT, or ALG
-  playerIDs: [String] # emails
+  playerIDs: [String] # should be emails
   xUsername: String
   oUsername: String
   winner: String #X, O, or blank
   winSquares: [Int]
   currPlayer: String # X or O
+  lastUpdateBy: String # randomized ID per session
 }
 
+type Subscription {
+    updatedGameByID(id:ID!): Game
+    @aws_subscribe(mutations: ["updateGame"])
+}

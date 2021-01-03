@@ -1,14 +1,13 @@
 import React from "react";
 
 interface FloatingSymbolsProps {
-    show: boolean
+
 }
 
-export const FloatingSymbols: React.FC<FloatingSymbolsProps> = ({ show }) => {
+export const FloatingSymbols: React.FC<FloatingSymbolsProps> = () => {
     return (
       <div className="mathsymbols" aria-hidden="true">
-        {show &&
-          [...Array(3)].map((item, idx) => (
+          {[...Array(3)].map((item, idx) => (
             <React.Fragment key={idx}>
               <div className="mathsymbol plus">+</div>
               <div className="mathsymbol times">&times;</div>

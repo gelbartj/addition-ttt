@@ -358,6 +358,21 @@ body {
   margin: 5px;
 }
 
+.turn {
+  font-weight: normal;
+  color: #666;
+  font-size: 1.2rem;
+  margin-top: 10px;
+}
+
+.turn.yours {
+  color: green;
+}
+
+.turn.theirs {
+  color: red;
+}
+
 .mathsymbols {
   position: relative;
   z-index: -999;

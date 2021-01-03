@@ -2,15 +2,16 @@
 /* eslint-disable */
 // this is an auto generated file. This will be overwritten
 
-export const onCreateGame = /* GraphQL */ `
-  subscription OnCreateGame {
-    onCreateGame {
+export const updatedGameById = /* GraphQL */ `
+  subscription UpdatedGameById($id: ID!) {
+    updatedGameByID(id: $id) {
       id
       roomCode
-      boardNums
       currBoard
+      activeSquares
       moveCount
       currMoves
+      lockedNumber
       gameType
       playerIDs
       xUsername
@@ -18,6 +19,30 @@ export const onCreateGame = /* GraphQL */ `
       winner
       winSquares
       currPlayer
+      lastUpdateBy
+      createdAt
+      updatedAt
+    }
+  }
+`;
+export const onCreateGame = /* GraphQL */ `
+  subscription OnCreateGame {
+    onCreateGame {
+      id
+      roomCode
+      currBoard
+      activeSquares
+      moveCount
+      currMoves
+      lockedNumber
+      gameType
+      playerIDs
+      xUsername
+      oUsername
+      winner
+      winSquares
+      currPlayer
+      lastUpdateBy
       createdAt
       updatedAt
     }
@@ -28,10 +53,11 @@ export const onUpdateGame = /* GraphQL */ `
     onUpdateGame {
       id
       roomCode
-      boardNums
       currBoard
+      activeSquares
       moveCount
       currMoves
+      lockedNumber
       gameType
       playerIDs
       xUsername
@@ -39,6 +65,7 @@ export const onUpdateGame = /* GraphQL */ `
       winner
       winSquares
       currPlayer
+      lastUpdateBy
       createdAt
       updatedAt
     }
@@ -49,10 +76,11 @@ export const onDeleteGame = /* GraphQL */ `
     onDeleteGame {
       id
       roomCode
-      boardNums
       currBoard
+      activeSquares
       moveCount
       currMoves
+      lockedNumber
       gameType
       playerIDs
       xUsername
@@ -60,6 +88,7 @@ export const onDeleteGame = /* GraphQL */ `
       winner
       winSquares
       currPlayer
+      lastUpdateBy
       createdAt
       updatedAt
     }

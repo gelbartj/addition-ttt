@@ -1,10 +1,11 @@
-import { useEffect, useReducer } from "react";
-import { GameChoice } from "../App";
+import { useEffect, useMemo, useReducer, useState } from "react";
+import { GameChoice as GameType } from "../App";
 import {
   addBoard,
   emptyStatus,
   makeBoardNums,
   moves,
+  multBoard,
   Players,
   search,
 } from "./InitialsAndUtilities";
@@ -13,27 +14,13 @@ import { Moves } from "./Moves";
 import { Board } from "./Board";
 import { API, graphqlOperation } from "aws-amplify";
 import { updateGame } from "../graphql/mutations";
+import { UpdateGameInput, UpdateGameMutation } from "../API";
+import { GraphQLGame, qlToState } from "./graphql-utilities";
+import { GraphQLResult } from "@aws-amplify/api";
 
 interface GameOverBlockProps {
   message?: string;
-  resetGame: (arg0?: boolean) => void;
 }
-
-export const GameOverBlock: React.FC<GameOverBlockProps> = ({
-  message,
-  resetGame,
-}) => (
-  <>
-    <div>{message}</div>
-    <button className="playAgain" onClick={() => resetGame()}>
-      Play again (same board)
-    </button>
-    &nbsp;&nbsp;
-    <button className="playAgain" onClick={() => resetGame(true)}>
-      Play again (new board)
-    </button>
-  </>
-);
 
 interface CurrPlayerBlockProps {
   currPlayer: Players;
@@ -47,14 +34,17 @@ const CurrPlayerBlock: React.FC<CurrPlayerBlockProps> = ({ currPlayer }) => (
 );
 
 interface GameProps {
-  gameChoice: GameChoice;
+  gameType: GameType;
   gameObj?: any;
+  playerIsX?: boolean;
+  receivedGameState?: GraphQLGame | null;
+  userId?: string;
 }
 
 let startPlayer: Players = "X";
-const startMove: (number | undefined)[] = [];
+const startMove: (number | null)[] = [];
 
-export const initialState = {
+export const initialGameState = {
   currPlayer: startPlayer as Players,
   randomBoard: false,
   currBoard: addBoard, // arbitrary, could easily be multboard
@@ -62,6 +52,7 @@ export const initialState = {
   currMoves: startMove,
   activeSquares: emptyStatus(addBoard.length, addBoard[0].length),
   winSquares: [] as number[][],
+  winner: "" as "X" | "O" | "",
   gameOver: false,
   moveCount: 0,
   showBoardInstructions: "" as "" | "active" | "hidden",
@@ -69,6 +60,7 @@ export const initialState = {
   lockedNumber: null as number | null,
   boardInstructions: "",
   hideHints: false,
+  gameType: "ADD" as GameType // arbitrary
 };
 
 export const actions = {
@@ -78,6 +70,7 @@ export const actions = {
   GAME_OVER: "GAME_OVER",
   TOGGLE_PLAYER: "TOGGLE_PLAYER",
   UPDATE_SQUARE_STATUS: "UPDATE_SQUARE_STATUS",
+  CLICKED_SQUARE: "CLICKED_SQUARE"
 } as const;
 
 interface AnyObj {
@@ -101,33 +94,61 @@ type StateField<T> = {
 
 interface UpdateAction {
   type: typeof UPDATE_STATE_VALUE;
-  payload: StateField<typeof initialState>;
+  payload: StateField<typeof initialGameState>;
 }
 
 export type Action = PayloadAction | NoPayloadAction | UpdateAction;
 
-export const Game: React.FC<GameProps> = ({ gameChoice, gameObj }) => {
-  const [gameState, dispatch] = useReducer(reducer, initialState);
+export const Game: React.FC<GameProps> = ({ gameType, gameObj, playerIsX, receivedGameState, userId }) => {
+  initialGameState.gameType = gameType;
+  initialGameState.currBoard = (gameType === "ADD" ? addBoard : multBoard);
+
+  const [gameState, dispatch] = useReducer(reducer, initialGameState);
+
+  useEffect(() => {
+    // run once on mount
+    (async () => syncDB())()
+  }, []);
+
+  const isMultiplayer = gameObj !== undefined && playerIsX !== undefined;
+  const isYourTurn = isMultiplayer && ((playerIsX && gameState.currPlayer === "X")
+    || (!playerIsX && gameState.currPlayer === "O"));
+
   // const hideMessageTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   function reducer(
-    state: typeof initialState,
+    state: typeof initialGameState,
     action: Action
-  ): typeof initialState {
+  ): typeof initialGameState {
     switch (action.type) {
       case actions.ADD_CLICKED_MOVE:
+        console.warn("---------Dispatch: add clicked move")
         return {
           ...state,
           currMoves: state.currMoves.concat(action.payload.move),
           currError: "",
         };
+      case actions.CLICKED_SQUARE:
+        const activeSquaresCopy = [...state.activeSquares];
+        const [row, col] = action.payload as number[];
+        activeSquaresCopy[row][col] = state.currPlayer;
+        return {
+          ...state,
+          currError: "",
+          activeSquares: activeSquaresCopy,
+          lastMoved: state.currMoves,
+          currPlayer: state.currPlayer === "O" ? "X" : "O",
+          lockedNumber: null
+        }
       case actions.UPDATE_SQUARE_STATUS:
+        console.warn("---------Dispatch: update square status")
         return {
           ...state,
           activeSquares: action.payload.activeSquares,
           moveCount: ++state.moveCount,
         };
       case UPDATE_STATE_VALUE:
+        console.warn("---------Updating values: ", action.payload)
         return {
           ...state,
           ...action.payload,
@@ -140,13 +161,13 @@ export const Game: React.FC<GameProps> = ({ gameChoice, gameObj }) => {
       case actions.RESET_GAME:
         // payload should contain newBoard boolean
         return {
-          ...initialState,
+          ...initialGameState,
           randomBoard: action.payload.newBoard,
           currBoard: action.payload.newBoard
             ? makeBoardNums(
                 state.currBoard.length,
                 state.currBoard[0].length,
-                gameChoice
+                gameType
               )
             : state.currBoard,
         };
@@ -157,6 +178,7 @@ export const Game: React.FC<GameProps> = ({ gameChoice, gameObj }) => {
           currError: `🎉 Game over! ${action.payload.winner} wins 🎉`,
           gameOver: true,
           winSquares: action.payload.winChain,
+          winner: action.payload.winner
         };
       case actions.TOGGLE_PLAYER:
         return {
@@ -169,42 +191,94 @@ export const Game: React.FC<GameProps> = ({ gameChoice, gameObj }) => {
     }
   }
 
-  useEffect(() => {
-    async function updateGameWrapper(state: typeof gameState) {
-      return await API.graphql(
-        graphqlOperation(updateGame, {
-          input: {
-            id: gameObj.id,
-            boardNums: state.currBoard.flat(),
-            currBoard: state.activeSquares.flat(),
-            currMoves: state.currMoves,
-            winSquares: state.winSquares.flat(),
-            currPlayer: state.currPlayer,
-            gameType: gameChoice
-          },
-        })
-      );
+  function arraysEqual(first: any[] | undefined | null, 
+    second: any[] | undefined | null) {
+      const firstNullish = first ?? undefined;
+      const secondNullish = second ?? undefined;
+    if (firstNullish === undefined && secondNullish === undefined) return true;
+    if (firstNullish === undefined && secondNullish !== undefined) return false;
+    if (firstNullish !== undefined && secondNullish === undefined) return false;
+
+    if (first!.length !== second!.length) return false;
+    for (let i = 0; i < first!.length; ++i) {
+      if (first![i] !== second![i]) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  function isNoChange(received: GraphQLGame | null | undefined, toSend: UpdateGameInput) {
+    // WARNING: This will only work with current GraphQL setup.
+    // If return from subscription is shrunk, will no longer work.
+      if (!received) return false;
+
+      if (arraysEqual(received.currBoard, toSend.currBoard)
+      && arraysEqual(received.activeSquares, toSend.activeSquares)
+      && arraysEqual(received.currMoves, toSend.currMoves)
+      && arraysEqual(received.winSquares, toSend.winSquares)
+      && received.currPlayer === toSend.currPlayer
+      && received.gameType === toSend.gameType
+      && received.winner === toSend.winner)
+      return true;
+
+      return false;
     }
 
-    updateGameWrapper(gameState).then((e) => console.log("Successfully updated: ", e))
-    .catch((e) => console.error(e));
-  }, [gameState, gameChoice, gameObj.id]);
+  const [lastGraphQLpayload, setLastGraphQLpayload] = useState<any>(null);
+  
+  async function syncDB() {
+      console.log("Preparing to send update to GraphQL");
+
+      const input: UpdateGameInput = {
+        id: gameObj.id,
+        currBoard: gameState.currBoard.flat(),
+        activeSquares: gameState.activeSquares.flat(),
+        currMoves: gameState.currMoves.length === 1 ? gameState.currMoves.concat(null) :gameState.currMoves,
+        winSquares: gameState.winSquares.flat(),
+        winner: gameState.winner,
+        currPlayer: gameState.currPlayer,
+        gameType: gameType,
+        lastUpdateBy: userId
+      }
+      console.log("=============", "Sending update to GraphQL...", input);
+      return (API.graphql(
+        graphqlOperation(updateGame, {
+          input: input
+        })
+      ) as Promise<GraphQLResult<UpdateGameMutation>>).then((e) => {
+      if (e) console.log("Successfully updated DB: ", e)
+    })
+    .catch((e) => console.error("Error updating graphQL database: ", e));
+  }
+
+
+  const deserialized = useMemo(() => {
+    console.log("receivedGameState changed: ", receivedGameState);
+    return receivedGameState ?
+    qlToState(receivedGameState): null}, [receivedGameState]);
+
+  useEffect(() => {
+    if (deserialized !== null) {
+      dispatch({ type: UPDATE_STATE_VALUE, payload: { ...deserialized } });
+    }
+  }, [deserialized])
 
   let movesSum =
     gameState.currMoves.length === 2 &&
-    gameState.currMoves[0] !== undefined &&
-    gameState.currMoves[1] !== undefined
+    gameState.currMoves[0] !== null &&
+    gameState.currMoves[1] !== null
       ? gameState.currMoves[0] + gameState.currMoves[1]
       : undefined;
 
   let movesProduct =
     gameState.currMoves.length === 2 &&
-    gameState.currMoves[0] !== undefined &&
-    gameState.currMoves[1] !== undefined
+    gameState.currMoves[0] !== null &&
+    gameState.currMoves[1] !== null
       ? gameState.currMoves[0] * gameState.currMoves[1]
       : undefined;
 
-  let movesResult = gameChoice ? movesSum : movesProduct;
+  let movesResult = gameType === "ADD" ? movesSum : movesProduct;
 
   function updateBoardInstructions() {
     // Check for squares with values matching movesResult and that are empty (no X or O)
@@ -224,7 +298,7 @@ export const Game: React.FC<GameProps> = ({ gameChoice, gameObj }) => {
 
     if (gameState.currMoves.length === 2 && gameState.moveCount === 0) {
       boardInstructions = `👉  Now make your move in a square that matches the ${
-        gameChoice === "ADD" ? "sum" : "product"
+        gameType === "ADD" ? "sum" : "product"
       } of the numbers you picked!`;
       showBoardInstructions = "active";
     } else if (gameState.moveCount === 1 && !noMoves) {
@@ -260,6 +334,7 @@ export const Game: React.FC<GameProps> = ({ gameChoice, gameObj }) => {
                 winChain: winChain,
               },
             });
+            syncDB();
             return true;
           }
         }
@@ -270,25 +345,49 @@ export const Game: React.FC<GameProps> = ({ gameChoice, gameObj }) => {
 
   function resetGame(random: boolean = false) {
     dispatch({ type: actions.RESET_GAME, payload: { newBoard: random } });
+    syncDB();
   }
+
+  const GameOverBlock: React.FC<GameOverBlockProps> = ({
+    message
+  }) => (
+    <>
+      <div>{message}</div>
+      <button className="playAgain" onClick={() => resetGame()}>
+        Play again (same board)
+      </button>
+      &nbsp;&nbsp;
+      <button className="playAgain" onClick={() => resetGame(true)}>
+        Play again (new board)
+      </button>
+    </>
+  );
 
   return (
     <>
+      { gameObj.roomCode }
       <ErrorBanner error={gameState.gameOver ? "" : gameState.currError} />
       <div id="moveStatus" className={gameState.gameOver ? "gameOver" : ""}>
         {gameState.gameOver ? (
-          <GameOverBlock message={gameState.currError} resetGame={resetGame} />
+          <GameOverBlock message={gameState.currError} />
         ) : (
+          <>
           <CurrPlayerBlock currPlayer={gameState.currPlayer} />
+          { isMultiplayer && <div className={`turn ${isYourTurn ? "yours" : "theirs"}`}>{
+              isYourTurn ? "Your turn!" : "Opponent's turn"
+        }</div> }
+          </>
         )}
       </div>
       <Moves
         state={gameState}
         moves={moves}
         movesResult={movesResult}
-        gameChoice={gameChoice}
+        gameType={gameType}
         dispatch={dispatch}
         updateBoardInstructions={updateBoardInstructions}
+        syncDB={syncDB}
+        isYourTurn={isYourTurn}
       />
       <Board
         state={gameState}
@@ -296,7 +395,11 @@ export const Game: React.FC<GameProps> = ({ gameChoice, gameObj }) => {
         dispatch={dispatch}
         checkGameOver={checkGameOver}
         updateBoardInstructions={updateBoardInstructions}
+        syncDB={syncDB}
+        isYourTurn={isYourTurn}
       />
     </>
   );
 };
+
+export default Game;

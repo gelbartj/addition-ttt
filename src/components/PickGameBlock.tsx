@@ -1,10 +1,10 @@
 import { GameChoice } from "../App";
 
 interface PickGameBlockProps {
-    setGameChoice: React.Dispatch<React.SetStateAction<GameChoice>>
+    setGameType: React.Dispatch<React.SetStateAction<GameChoice>>
 }
 
-export const PickGameBlock: React.FC<PickGameBlockProps> = ({ setGameChoice }) => (
+export const PickGameBlock: React.FC<PickGameBlockProps> = ({ setGameType: setGameChoice }) => (
     <div id="pickGame">
       <div>
         <div className="startMsg">

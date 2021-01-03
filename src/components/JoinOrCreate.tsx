@@ -31,7 +31,7 @@ export const JoinOrCreate: React.FC<JoinOrCreateProps> = ({
                 });
               })
               .catch((e) => {
-                console.error(e);
+                console.error("Join or create error: ", e);
                 dispatch({
                   type: UPDATE_GLOBALSTATE_VALUE,
                   payload: {

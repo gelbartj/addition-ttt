@@ -1,4 +1,4 @@
-import { UPDATE_GLOBALSTATE_VALUE, globalActions } from "../App";
+import { UPDATE_GLOBALSTATE_VALUE } from "../App";
 
 interface PickMultiplayerProps {
   dispatch: any;

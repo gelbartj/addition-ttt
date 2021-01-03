@@ -1,17 +1,26 @@
 import { GameChoice } from "../App";
-import { Action, actions, initialState, UPDATE_STATE_VALUE } from "./Game";
+import { Action, actions, initialGameState, UPDATE_STATE_VALUE } from "./Game";
 
 interface MovesProps {
-  state: typeof initialState;
+  state: typeof initialGameState;
   moves: number[];
   movesResult?: number;
-  gameChoice: GameChoice;
+  gameType: GameChoice;
   dispatch: React.Dispatch<Action>;
   updateBoardInstructions: () => void;
+  syncDB: () => void;
+  isYourTurn: boolean;
 }
 
 export const Moves: React.FC<MovesProps> = (props) => {
   function setMove(move: number) {
+    if (!props.isYourTurn) {
+      props.dispatch({
+        type: UPDATE_STATE_VALUE,
+        payload: { currError: "It's not your turn!" }
+      });
+      return;
+    }
     if (props.state.currMoves.includes(move)) {
       if (props.state.currMoves.length === 1) {
         // Double current move
@@ -20,6 +29,7 @@ export const Moves: React.FC<MovesProps> = (props) => {
           payload: { move: move },
         });
         props.updateBoardInstructions();
+        props.syncDB();
         return;
       }
       // toggle - remove clicked move from list
@@ -51,6 +61,7 @@ export const Moves: React.FC<MovesProps> = (props) => {
             payload: { lockedNumber: newLockedNumber! },
           });
         }
+        props.syncDB();
       } else {
         props.dispatch({
           type: UPDATE_STATE_VALUE,
@@ -72,6 +83,8 @@ export const Moves: React.FC<MovesProps> = (props) => {
         payload: { move: move },
       });
       props.updateBoardInstructions();
+      console.log("ABOUT TO SYNC DB");
+      props.syncDB();
     } else {
       props.dispatch({
         type: UPDATE_STATE_VALUE,
@@ -96,7 +109,7 @@ export const Moves: React.FC<MovesProps> = (props) => {
             }`}
           >
             {props.state.currMoves.length === 0 ? "👉  " : ""}Select two numbers
-            to {props.gameChoice ? "add" : "multiply"} together (change one
+            to {props.gameType ? "add" : "multiply"} together (change one
             number per turn):
           </span>
         )}
@@ -123,7 +136,7 @@ export const Moves: React.FC<MovesProps> = (props) => {
       </div>
       <div id="movesResult" className={props.movesResult ? "" : "hidden"}>
         {props.movesResult !== undefined && !props.state.gameOver
-          ? `${props.state.currMoves[0]} ${props.gameChoice ? "+" : "\u2715"} ${
+          ? `${props.state.currMoves[0]} ${props.gameType ? "+" : "\u2715"} ${
               props.state.currMoves[1]
             } = ${props.movesResult}`
           : ""}
@@ -131,3 +144,5 @@ export const Moves: React.FC<MovesProps> = (props) => {
     </div>
   );
 };
+
+export default Moves;

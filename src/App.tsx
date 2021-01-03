@@ -1,4 +1,4 @@
-import React, { useReducer } from "react";
+import React, { useReducer, useState } from "react";
 import "./App.css";
 import { makeRoomCode } from "./components/InitialsAndUtilities";
 import Amplify, { API, graphqlOperation } from 'aws-amplify';
@@ -12,6 +12,8 @@ import { FloatingSymbols } from "./components/FloatingSymbols";
 import { JoinOrCreate } from "./components/JoinOrCreate";
 import { JoinCode } from "./components/JoinCode";
 import { listGames } from "./graphql/queries";
+import { ListGamesQuery } from "./API";
+import { GraphQLResult } from "@aws-amplify/api";
 
 Amplify.configure(awsconfig);
 
@@ -22,9 +24,9 @@ async function createGameObj() {
   return await API.graphql(graphqlOperation(createGame, {input: game}));
 }
 
-async function getGameObj(code: string) {
+export async function getGameObj(code: string) {
   const game = { roomCode: { eq: code.trim().toUpperCase() }};
-  return await API.graphql(graphqlOperation(listGames, {filter: game}));
+  return await API.graphql(graphqlOperation(listGames, {filter: game})) as GraphQLResult<ListGamesQuery>;
 }
 
 export const UPDATE_GLOBALSTATE_VALUE = "UPDATE_GLOBALSTATE_VALUE";
@@ -49,8 +51,8 @@ export const globalInitialState = {
 
 function App() { 
   
-
   const [globalState, globalDispatch] = useReducer(globalReducer, globalInitialState);
+  const [generatedUserId, setGeneratedUserId] = useState(makeRoomCode(16));
 
   interface UpdateAction {
     type: typeof UPDATE_GLOBALSTATE_VALUE;
@@ -94,10 +96,11 @@ function App() {
     globalState.createGameCode ?
     (globalState.isLoading ? <>Creating your remote game<Loading dotsOnly={true} /></> : <></>)
     : (globalState.isLoading ? <>Joining remote game<Loading dotsOnly={true} /></> : 
-    <><h1>Enter the code your friend sent you.</h1><JoinCode dispatch={globalDispatch} getGameObj={getGameObj} /></>)
+    <><h1>Enter the code your friend sent you.</h1><JoinCode dispatch={globalDispatch} /></>)
   }
 
-  const isReady = globalState.APIgameObj && globalState.currError === "";
+  const isReady = globalState.currError === "" && (globalState.isMultiplayer ? globalState.APIgameObj
+                  : (globalState.username !== null && globalState.isMultiplayer !== null));
 
   return (
     <>
@@ -113,15 +116,15 @@ function App() {
       <UsernameInput dispatch={globalDispatch} />
       </>
     : globalState.isMultiplayer === null ? <>
-      <h1>Great, thanks { globalState.username }!</h1>
+      <h1>Great - thanks, { globalState.username }!</h1>
       <PickMultiplayer dispatch={globalDispatch} />
     </>
-    : globalState.isMultiplayer ? <MultiplayerSetup /> 
+    : (globalState.isMultiplayer && !globalState.APIgameObj) ? <MultiplayerSetup /> 
     : ""}
     </div>
     { globalState.currError && <div style={{backgroundColor:"salmon"}}>Oh no! There was an error: {globalState.currError}</div>}
-    { isReady ? <GameSession 
-      gameObj={ globalState.APIgameObj } dispatch={globalDispatch} /> : <FloatingSymbols show={true} /> }
+    { isReady ? <GameSession createdCode={globalState.createGameCode} userId={generatedUserId}
+      gameObj={ globalState.APIgameObj } dispatch={globalDispatch} /> : <FloatingSymbols /> }
     </main>
     </>
   );

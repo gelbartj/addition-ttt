@@ -10,10 +10,11 @@ export const createGame = /* GraphQL */ `
     createGame(input: $input, condition: $condition) {
       id
       roomCode
-      boardNums
       currBoard
+      activeSquares
       moveCount
       currMoves
+      lockedNumber
       gameType
       playerIDs
       xUsername
@@ -21,6 +22,7 @@ export const createGame = /* GraphQL */ `
       winner
       winSquares
       currPlayer
+      lastUpdateBy
       createdAt
       updatedAt
     }
@@ -34,10 +36,11 @@ export const updateGame = /* GraphQL */ `
     updateGame(input: $input, condition: $condition) {
       id
       roomCode
-      boardNums
       currBoard
+      activeSquares
       moveCount
       currMoves
+      lockedNumber
       gameType
       playerIDs
       xUsername
@@ -45,6 +48,7 @@ export const updateGame = /* GraphQL */ `
       winner
       winSquares
       currPlayer
+      lastUpdateBy
       createdAt
       updatedAt
     }
@@ -58,10 +62,11 @@ export const deleteGame = /* GraphQL */ `
     deleteGame(input: $input, condition: $condition) {
       id
       roomCode
-      boardNums
       currBoard
+      activeSquares
       moveCount
       currMoves
+      lockedNumber
       gameType
       playerIDs
       xUsername
@@ -69,6 +74,7 @@ export const deleteGame = /* GraphQL */ `
       winner
       winSquares
       currPlayer
+      lastUpdateBy
       createdAt
       updatedAt
     }

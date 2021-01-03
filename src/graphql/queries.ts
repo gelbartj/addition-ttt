@@ -7,10 +7,11 @@ export const getGame = /* GraphQL */ `
     getGame(id: $id) {
       id
       roomCode
-      boardNums
       currBoard
+      activeSquares
       moveCount
       currMoves
+      lockedNumber
       gameType
       playerIDs
       xUsername
@@ -18,6 +19,7 @@ export const getGame = /* GraphQL */ `
       winner
       winSquares
       currPlayer
+      lastUpdateBy
       createdAt
       updatedAt
     }
@@ -33,10 +35,11 @@ export const listGames = /* GraphQL */ `
       items {
         id
         roomCode
-        boardNums
         currBoard
+        activeSquares
         moveCount
         currMoves
+        lockedNumber
         gameType
         playerIDs
         xUsername
@@ -44,6 +47,7 @@ export const listGames = /* GraphQL */ `
         winner
         winSquares
         currPlayer
+        lastUpdateBy
         createdAt
         updatedAt
       }

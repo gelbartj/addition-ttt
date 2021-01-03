@@ -1,23 +1,29 @@
 import { FormEvent, useState } from "react";
-import { UPDATE_GLOBALSTATE_VALUE } from "../App";
+import { UPDATE_GLOBALSTATE_VALUE, getGameObj } from "../App";
 
 interface JoinCodeProps {
     dispatch: any,
-    getGameObj: (arg0: string) => Promise<any>
 }
 
-export const JoinCode: React.FC<JoinCodeProps> = ({ dispatch, getGameObj }) => {
+export const JoinCode: React.FC<JoinCodeProps> = ({ dispatch }) => {
     const [roomCode, setRoomCode] = useState("");
     function handleSubmit(e: FormEvent<HTMLFormElement>) {
         e.preventDefault();
         dispatch({ type: UPDATE_GLOBALSTATE_VALUE, payload: { isLoading: true }});
         getGameObj(roomCode).then((result) => {
-            console.log("Query result ", result);
-            dispatch({ type: UPDATE_GLOBALSTATE_VALUE, payload: { APIgameObj: result.data }})
+            console.log("Query result: ", result);
+            if ("data" in result && (result.data?.listGames?.items || []).length > 0) {
+                dispatch({ type: UPDATE_GLOBALSTATE_VALUE, payload: { 
+                    APIgameObj: result.data!.listGames!.items![0],
+                    isLoading: false
+                 }})
+            }
         })
         .catch((e) => {
-            console.error(e);
-            dispatch({ type: UPDATE_GLOBALSTATE_VALUE, payload: { currError: e }});
+            console.error("Join code error: ", e);
+            dispatch({ type: UPDATE_GLOBALSTATE_VALUE, payload: { 
+                currError: e,
+                isLoading: false  }});
         })
     }
     return <div className="usernameBlock">

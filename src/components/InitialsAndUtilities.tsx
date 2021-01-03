@@ -156,12 +156,12 @@ export function search(row = 0, col = 0, activeSquares: SquareVal[][]) {
   return winChain;
 }
 
-export function makeRoomCode() {
-  const CODE_LENGTH = 6; // 2.17 billion combinations
+export function makeRoomCode(codeLength = 6) {
+  // 2.17 billion combinations
   const validChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
   let code = "";
 
-  for (let i = 0; i < CODE_LENGTH; ++i) {
+  for (let i = 0; i < codeLength; ++i) {
     code += validChars[Math.floor(Math.random() * validChars.length)];
   }
   return code;

@@ -1,17 +1,26 @@
 import { useRef } from "react";
-import { Action, actions, initialState, UPDATE_STATE_VALUE } from "./Game";
+import { Action, actions, initialGameState, UPDATE_STATE_VALUE } from "./Game";
 
 interface BoardProps {
-  state: typeof initialState;
+  state: typeof initialGameState;
   dispatch: React.Dispatch<Action>;
   movesResult: number | undefined;
   checkGameOver: () => boolean;
   updateBoardInstructions: () => void;
+  syncDB: () => void;
+  isYourTurn: boolean;
 }
 
 export const Board: React.FC<BoardProps> = (props) => {
   function setSquareStatus(row: number, col: number) {
     if (props.state.gameOver) return;
+    if (!props.isYourTurn) {
+      props.dispatch({
+        type: UPDATE_STATE_VALUE,
+        payload: { currError: "It's not your turn!" }
+      });
+      return;
+    }
     if (
       props.state.currMoves[0] === undefined ||
       props.state.currMoves[0] === undefined
@@ -36,20 +45,11 @@ export const Board: React.FC<BoardProps> = (props) => {
       });
       return;
     }
-    props.dispatch({ type: actions.RESET_ERROR });
-    let activeSquaresCopy = [...props.state.activeSquares];
-    activeSquaresCopy[row][col] = props.state.currPlayer;
-    props.dispatch({
-      type: actions.UPDATE_SQUARE_STATUS,
-      payload: { activeSquares: activeSquaresCopy },
-    });
+    props.dispatch({ type: actions.CLICKED_SQUARE,
+      payload: [row, col] });
     props.updateBoardInstructions();
-    props.dispatch({ type: actions.TOGGLE_PLAYER });
     props.checkGameOver();
-    props.dispatch({
-      type: UPDATE_STATE_VALUE,
-      payload: { lockedNumber: null },
-    });
+    props.syncDB();
   }
 
   const boardRef = useRef<HTMLDivElement>(null);
@@ -120,3 +120,5 @@ export const Board: React.FC<BoardProps> = (props) => {
     </>
   );
 };
+
+export default Board;
