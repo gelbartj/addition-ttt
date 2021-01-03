@@ -7,8 +7,6 @@ interface MovesProps {
   movesResult?: number;
   gameType: GameChoice;
   dispatch: React.Dispatch<Action>;
-  updateBoardInstructions: () => void;
-  syncDB: () => void;
   isYourTurn: boolean;
 }
 
@@ -28,8 +26,8 @@ export const Moves: React.FC<MovesProps> = (props) => {
           type: actions.ADD_CLICKED_MOVE,
           payload: { move: move },
         });
-        props.updateBoardInstructions();
-        props.syncDB();
+        // props.dispatch({ type: actions.UPDATE_BOARD_INSTRUCTIONS });
+        props.dispatch({ type: actions.SYNC_DB });
         return;
       }
       // toggle - remove clicked move from list
@@ -44,7 +42,7 @@ export const Moves: React.FC<MovesProps> = (props) => {
           type: UPDATE_STATE_VALUE,
           payload: { currMoves: newMoves },
         });
-        props.updateBoardInstructions();
+        // props.dispatch({ type: actions.UPDATE_BOARD_INSTRUCTIONS });
         props.dispatch({ type: actions.RESET_ERROR });
         if (
           props.state.lastMoved &&
@@ -61,7 +59,7 @@ export const Moves: React.FC<MovesProps> = (props) => {
             payload: { lockedNumber: newLockedNumber! },
           });
         }
-        props.syncDB();
+        props.dispatch({ type: actions.SYNC_DB });
       } else {
         props.dispatch({
           type: UPDATE_STATE_VALUE,
@@ -76,15 +74,17 @@ export const Moves: React.FC<MovesProps> = (props) => {
           type: UPDATE_STATE_VALUE,
           payload: { lockedNumber: move },
         });
+        console.log("Player was ", props.state.currPlayer);
         props.dispatch({ type: actions.TOGGLE_PLAYER });
+        console.log("After toggle, player is ", props.state.currPlayer);
       }
       props.dispatch({
         type: actions.ADD_CLICKED_MOVE,
         payload: { move: move },
       });
-      props.updateBoardInstructions();
+      // props.dispatch({ type: actions.UPDATE_BOARD_INSTRUCTIONS });
       console.log("ABOUT TO SYNC DB");
-      props.syncDB();
+      props.dispatch({ type: actions.SYNC_DB });
     } else {
       props.dispatch({
         type: UPDATE_STATE_VALUE,

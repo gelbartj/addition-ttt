@@ -5,9 +5,6 @@ interface BoardProps {
   state: typeof initialGameState;
   dispatch: React.Dispatch<Action>;
   movesResult: number | undefined;
-  checkGameOver: () => boolean;
-  updateBoardInstructions: () => void;
-  syncDB: () => void;
   isYourTurn: boolean;
 }
 
@@ -47,9 +44,9 @@ export const Board: React.FC<BoardProps> = (props) => {
     }
     props.dispatch({ type: actions.CLICKED_SQUARE,
       payload: [row, col] });
-    props.updateBoardInstructions();
-    props.checkGameOver();
-    props.syncDB();
+    // props.dispatch({ type: actions.UPDATE_BOARD_INSTRUCTIONS });
+    // props.dispatch({ type: actions.CHECK_GAME_OVER });
+    props.dispatch({ type: actions.SYNC_DB });
   }
 
   const boardRef = useRef<HTMLDivElement>(null);

@@ -11,7 +11,6 @@ export const updatedGameById = /* GraphQL */ `
       activeSquares
       moveCount
       currMoves
-      lockedNumber
       gameType
       playerIDs
       xUsername
@@ -34,7 +33,6 @@ export const onCreateGame = /* GraphQL */ `
       activeSquares
       moveCount
       currMoves
-      lockedNumber
       gameType
       playerIDs
       xUsername
@@ -57,7 +55,6 @@ export const onUpdateGame = /* GraphQL */ `
       activeSquares
       moveCount
       currMoves
-      lockedNumber
       gameType
       playerIDs
       xUsername
@@ -80,7 +77,6 @@ export const onDeleteGame = /* GraphQL */ `
       activeSquares
       moveCount
       currMoves
-      lockedNumber
       gameType
       playerIDs
       xUsername

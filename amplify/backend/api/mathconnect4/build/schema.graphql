@@ -5,7 +5,6 @@ type Game {
   activeSquares: [String]
   moveCount: Int
   currMoves: [Int]
-  lockedNumber: Int
   gameType: String
   playerIDs: [String]
   xUsername: String
@@ -115,7 +114,6 @@ input ModelGameFilterInput {
   activeSquares: ModelStringInput
   moveCount: ModelIntInput
   currMoves: ModelIntInput
-  lockedNumber: ModelIntInput
   gameType: ModelStringInput
   playerIDs: ModelStringInput
   xUsername: ModelStringInput
@@ -154,7 +152,6 @@ input CreateGameInput {
   activeSquares: [String]
   moveCount: Int
   currMoves: [Int]
-  lockedNumber: Int
   gameType: String
   playerIDs: [String]
   xUsername: String
@@ -172,7 +169,6 @@ input UpdateGameInput {
   activeSquares: [String]
   moveCount: Int
   currMoves: [Int]
-  lockedNumber: Int
   gameType: String
   playerIDs: [String]
   xUsername: String
@@ -199,7 +195,6 @@ input ModelGameConditionInput {
   activeSquares: ModelStringInput
   moveCount: ModelIntInput
   currMoves: ModelIntInput
-  lockedNumber: ModelIntInput
   gameType: ModelStringInput
   playerIDs: ModelStringInput
   xUsername: ModelStringInput

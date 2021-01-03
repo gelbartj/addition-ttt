@@ -11,7 +11,6 @@ export const getGame = /* GraphQL */ `
       activeSquares
       moveCount
       currMoves
-      lockedNumber
       gameType
       playerIDs
       xUsername
@@ -39,7 +38,6 @@ export const listGames = /* GraphQL */ `
         activeSquares
         moveCount
         currMoves
-        lockedNumber
         gameType
         playerIDs
         xUsername

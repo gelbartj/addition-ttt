@@ -22,7 +22,7 @@ export const JoinCode: React.FC<JoinCodeProps> = ({ dispatch }) => {
         .catch((e) => {
             console.error("Join code error: ", e);
             dispatch({ type: UPDATE_GLOBALSTATE_VALUE, payload: { 
-                currError: e,
+                currError: e?.errors?.map((er: any) => er?.message),
                 isLoading: false  }});
         })
     }

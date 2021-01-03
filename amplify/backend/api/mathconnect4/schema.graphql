@@ -6,7 +6,6 @@ type Game @model
   activeSquares: [String] # X, O, or blank
   moveCount: Int
   currMoves: [Int]
-  lockedNumber: Int
   gameType: String # ADD, MULT, or ALG
   playerIDs: [String] # should be emails
   xUsername: String
