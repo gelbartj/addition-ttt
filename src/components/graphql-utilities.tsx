@@ -1,4 +1,4 @@
-import { extGameState } from "./Game";
+import { GameState } from "./Game";
 
 export interface GraphQLGame {
   id: number;
@@ -41,7 +41,7 @@ function reshapeFlatBoard(flat: any[], rows = 8, cols = 8) {
 }
 
 export function qlToState(ql: GraphQLGame) {
-  const newState: Partial<typeof extGameState> = {};
+  const newState: Partial<GameState> = {};
 
   if (ql.currBoard !== undefined) {
     if ((ql.currBoard?.length || 0) > 0) {
@@ -52,9 +52,7 @@ export function qlToState(ql: GraphQLGame) {
         console.error("Failed to deserialize boardNums");
         return newState;
       }
-    } else {
-      newState.currBoard = [];
-    }
+    } 
   }
   if (ql.activeSquares !== undefined) {
     if ((ql.activeSquares?.length || 0) > 0) {
@@ -65,9 +63,9 @@ export function qlToState(ql: GraphQLGame) {
         console.error("Failed to deserialize currBoard");
         return newState;
       }
-    } else {
+    } /* else {
       newState.activeSquares = [];
-    }
+    } */
   }
 
   if (ql.currMoves !== undefined && ql.currMoves !== null) {
@@ -78,7 +76,7 @@ export function qlToState(ql: GraphQLGame) {
     if ((ql.winSquares?.length || 0) > 0) {
       if (ql.winSquares.length % 2 !== 0) {
         console.error(
-          "Failed to deserialize winSquares, " + "invalid board shape"
+          "Failed to deserialize winSquares: invalid board shape"
         );
         return newState;
       }
@@ -96,23 +94,23 @@ export function qlToState(ql: GraphQLGame) {
     }
   }
 
-  if (ql.moveCount !== undefined) {
+  if (ql.moveCount !== undefined && ql.moveCount !== null) {
     newState.moveCount = ql.moveCount;
   }
 
-  if (ql.winner !== undefined) {
+  if (ql.winner !== undefined && ql.winner !== null) {
     newState.winner = ql.winner;
   }
 
-  if (ql.currPlayer !== undefined) newState.currPlayer = ql.currPlayer;
+  if (ql.currPlayer) newState.currPlayer = ql.currPlayer;
 
-  if (ql.gameType !== undefined) newState.gameType = ql.gameType;
+  if (ql.gameType) newState.gameType = ql.gameType;
 
-  if (ql.oUsername !== undefined) {
+  if (ql.oUsername) {
     newState.oUsername = ql.oUsername;
   }
 
-  if (ql.xUsername !== undefined) {
+  if (ql.xUsername) {
     newState.xUsername = ql.xUsername;
   }
 

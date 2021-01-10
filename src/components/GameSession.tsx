@@ -52,7 +52,7 @@ export const GameSession: React.FC<GameSessionProps> = (props) => {
     return () => {
       if (subscription) subscription.unsubscribe();
     };
-  }, [props.createdCode, props.gameObj.id, props.userId]);
+  }, [props.createdCode, props.gameObj?.id, props.userId]);
 
   return (
     <>

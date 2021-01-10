@@ -1,8 +1,8 @@
 import { useRef } from "react";
-import { Action, actions, extGameState, UPDATE_STATE_VALUE } from "./Game";
+import { Action, actions, GameState, UPDATE_STATE_VALUE } from "./Game";
 
 interface BoardProps {
-  state: typeof extGameState;
+  state: GameState;
   dispatch: React.Dispatch<Action>;
   movesResult: number | undefined;
   isYourTurn: boolean;
@@ -70,13 +70,16 @@ export const Board: React.FC<BoardProps> = (props) => {
       <div
         id="boardInstructions"
         className={
-          props.state.hideHints ? "hidden" : props.state.showBoardInstructions
+          (props.state.hideHints) ? "hidden" : props.state.showBoardInstructions
         }
       >
+        <div id="boardInstructionsContent" className={
+          (props.state.hideHints) ? "hidden" : props.state.showBoardInstructions
+        }>
         {props.state.boardInstructions}
         {props.state.showBoardInstructions && <HideHints />}
+        </div>
       </div>
-      { "board: "}{ props.state.currBoard }
       <div id="board" ref={boardRef}>
         {props.state.currBoard.map((boardRow, rowIdx) => (
           <div className="boardRow" key={rowIdx}>

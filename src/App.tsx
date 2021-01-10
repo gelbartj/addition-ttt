@@ -1,4 +1,4 @@
-import React, { useReducer, useState } from "react";
+import React, { useReducer } from "react";
 import "./App.css";
 import { makeRoomCode } from "./components/InitialsAndUtilities";
 import Amplify, { API, graphqlOperation } from 'aws-amplify';
@@ -53,7 +53,7 @@ export const globalInitialState = {
 function App() { 
   
   const [globalState, globalDispatch] = useReducer(globalReducer, globalInitialState);
-  const [generatedUserId, setGeneratedUserId] = useState(makeRoomCode(16));
+  const generatedUserId = makeRoomCode(16);
 
   interface UpdateAction {
     type: typeof UPDATE_GLOBALSTATE_VALUE;

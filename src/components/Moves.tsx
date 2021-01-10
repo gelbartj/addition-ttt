@@ -1,8 +1,8 @@
 import { GameChoice } from "../App";
-import { Action, actions, extGameState, UPDATE_STATE_VALUE } from "./Game";
+import { Action, actions, GameState, UPDATE_STATE_VALUE } from "./Game";
 
 interface MovesProps {
-  state: typeof extGameState;
+  state: GameState;
   moves: number[];
   movesResult?: number;
   gameType: GameChoice;
@@ -27,7 +27,7 @@ export const Moves: React.FC<MovesProps> = (props) => {
           type: actions.ADD_CLICKED_MOVE,
           payload: { move: move },
         });
-        // props.dispatch({ type: actions.UPDATE_BOARD_INSTRUCTIONS });
+        props.dispatch({ type: actions.UPDATE_BOARD_INSTRUCTIONS });
         props.dispatch({ type: actions.SYNC_DB });
         return;
       }
@@ -43,7 +43,7 @@ export const Moves: React.FC<MovesProps> = (props) => {
           type: UPDATE_STATE_VALUE,
           payload: { currMoves: newMoves },
         });
-        // props.dispatch({ type: actions.UPDATE_BOARD_INSTRUCTIONS });
+        props.dispatch({ type: actions.UPDATE_BOARD_INSTRUCTIONS });
         props.dispatch({ type: actions.RESET_ERROR });
         if (
           props.state.lastMoved &&
@@ -83,7 +83,7 @@ export const Moves: React.FC<MovesProps> = (props) => {
         type: actions.ADD_CLICKED_MOVE,
         payload: { move: move },
       });
-      // props.dispatch({ type: actions.UPDATE_BOARD_INSTRUCTIONS });
+      props.dispatch({ type: actions.UPDATE_BOARD_INSTRUCTIONS });
       console.log("ABOUT TO SYNC DB");
       props.dispatch({ type: actions.SYNC_DB });
     } else {

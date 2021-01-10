@@ -17,8 +17,15 @@ type Game {
   updatedAt: AWSDateTime!
 }
 
+type Mutation {
+  customUpdateGame(id: ID!, roomCode: String, currBoard: [Int], activeSquares: [String], moveCount: Int, currMoves: [Int], gameType: String, playerIDs: [String], xUsername: String, oUsername: String, winner: String, winSquares: [Int], currPlayer: String, lastUpdateBy: String): Game!
+  createGame(input: CreateGameInput!, condition: ModelGameConditionInput): Game
+  updateGame(input: UpdateGameInput!, condition: ModelGameConditionInput): Game
+  deleteGame(input: DeleteGameInput!, condition: ModelGameConditionInput): Game
+}
+
 type Subscription {
-  updatedGameByID(id: ID!): Game @aws_subscribe(mutations: ["updateGame"])
+  updatedGameByID(id: ID!): Game @aws_subscribe(mutations: ["customUpdateGame"])
   onCreateGame: Game @aws_subscribe(mutations: ["createGame"])
   onUpdateGame: Game @aws_subscribe(mutations: ["updateGame"])
   onDeleteGame: Game @aws_subscribe(mutations: ["deleteGame"])
@@ -181,12 +188,6 @@ input UpdateGameInput {
 
 input DeleteGameInput {
   id: ID
-}
-
-type Mutation {
-  createGame(input: CreateGameInput!, condition: ModelGameConditionInput): Game
-  updateGame(input: UpdateGameInput!, condition: ModelGameConditionInput): Game
-  deleteGame(input: DeleteGameInput!, condition: ModelGameConditionInput): Game
 }
 
 input ModelGameConditionInput {

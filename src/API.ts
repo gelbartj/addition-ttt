@@ -147,6 +147,45 @@ export type ModelIDInput = {
   size?: ModelSizeInput | null,
 };
 
+export type CustomUpdateGameMutationVariables = {
+  id: string,
+  roomCode?: string | null,
+  currBoard?: Array< number | null > | null,
+  activeSquares?: Array< string | null > | null,
+  moveCount?: number | null,
+  currMoves?: Array< number | null > | null,
+  gameType?: string | null,
+  playerIDs?: Array< string | null > | null,
+  xUsername?: string | null,
+  oUsername?: string | null,
+  winner?: string | null,
+  winSquares?: Array< number | null > | null,
+  currPlayer?: string | null,
+  lastUpdateBy?: string | null,
+};
+
+export type CustomUpdateGameMutation = {
+  customUpdateGame:  {
+    __typename: "Game",
+    id: string,
+    roomCode: string,
+    currBoard: Array< number | null > | null,
+    activeSquares: Array< string | null > | null,
+    moveCount: number | null,
+    currMoves: Array< number | null > | null,
+    gameType: string | null,
+    playerIDs: Array< string | null > | null,
+    xUsername: string | null,
+    oUsername: string | null,
+    winner: string | null,
+    winSquares: Array< number | null > | null,
+    currPlayer: string | null,
+    lastUpdateBy: string | null,
+    createdAt: string,
+    updatedAt: string,
+  },
+};
+
 export type CreateGameMutationVariables = {
   input: CreateGameInput,
   condition?: ModelGameConditionInput | null,

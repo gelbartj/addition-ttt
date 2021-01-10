@@ -1,8 +1,8 @@
 import { FormEvent, useState } from "react";
 import { UPDATE_GLOBALSTATE_VALUE, getGameObj } from "../App";
 import { API, graphqlOperation } from "aws-amplify";
-import { updateGame } from "../graphql/mutations";
-import { UpdateGameInput, UpdateGameMutation } from "../API";
+import { customUpdateGame } from "../graphql/mutations";
+import { CustomUpdateGameMutation } from "../API";
 import { GraphQLResult } from "@aws-amplify/api";
 
 interface JoinCodeProps {
@@ -26,10 +26,10 @@ export const JoinCode: React.FC<JoinCodeProps> = ({ dispatch, username }) => {
 
                 if (!apiGameObj?.oUsername) {
                     (API.graphql(
-                        graphqlOperation(updateGame, {
+                        graphqlOperation(customUpdateGame, {
                           input: { id: apiGameObj?.id, oUsername: username },
                         })
-                      ) as Promise<GraphQLResult<UpdateGameMutation>>)
+                      ) as Promise<GraphQLResult<CustomUpdateGameMutation>>)
                         .then((e) => {
                           if (e) console.log("Successfully updated oUsername: ", e);
                         })

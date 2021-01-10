@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useReducer } from "react";
+import { useCallback, useEffect, useMemo, useReducer } from "react";
 import { GameChoice as GameType } from "../App";
 import {
   addBoard,
@@ -8,13 +8,14 @@ import {
   multBoard,
   Players,
   search,
+  SquareVal,
 } from "./InitialsAndUtilities";
 import { ErrorBanner } from "./ErrorBanner";
 import { Moves } from "./Moves";
 import { Board } from "./Board";
 import { API, graphqlOperation } from "aws-amplify";
-import { updateGame } from "../graphql/mutations";
-import { UpdateGameInput, UpdateGameMutation } from "../API";
+import { customUpdateGame } from "../graphql/mutations";
+import { UpdateGameInput, CustomUpdateGameMutation } from "../API";
 import { GraphQLGame, qlToState } from "./graphql-utilities";
 import { GraphQLResult } from "@aws-amplify/api";
 
@@ -46,25 +47,25 @@ interface GameProps {
 let startPlayer: Players = "X";
 const startMove: (number | null)[] = [];
 
-export const extGameState = {
-  currPlayer: startPlayer as Players,
-  randomBoard: false,
-  currBoard: addBoard, // arbitrary, could easily be multboard
-  currError: "",
-  currMoves: startMove,
-  activeSquares: emptyStatus(addBoard.length, addBoard[0].length),
-  winSquares: [] as number[][],
-  winner: "" as "X" | "O" | "",
-  moveCount: 0,
-  showBoardInstructions: "" as "" | "active" | "hidden",
-  lastMoved: [] as typeof startMove,
-  lockedNumber: null as number | null,
-  boardInstructions: "",
-  hideHints: false,
-  gameType: "ADD" as GameType, // arbitrary
-  needsUpdate: true,
-  xUsername: "[Your name]",
-  oUsername: "[Awaiting opponent]"
+export interface GameState {
+  currPlayer: Players,
+  randomBoard: boolean,
+  currBoard: number[][],
+  currError: string,
+  currMoves: (number | null)[],
+  activeSquares: SquareVal[][],
+  winSquares: number[][],
+  winner: "X" | "O" | "",
+  moveCount: number,
+  showBoardInstructions: "" | "active" | "hidden",
+  lastMoved: (number | null)[],
+  lockedNumber: number | null,
+  boardInstructions: string,
+  hideHints: boolean,
+  gameType: GameType, // arbitrary
+  needsUpdate: boolean,
+  xUsername: string,
+  oUsername: string
 };
 
 const noPayloadActions = {
@@ -79,7 +80,6 @@ const payloadActions = {
   ADD_CLICKED_MOVE: "ADD_CLICKED_MOVE",
   RESET_GAME: "RESET_GAME",
   GAME_OVER: "GAME_OVER",
-  UPDATE_SQUARE_STATUS: "UPDATE_SQUARE_STATUS",
   CLICKED_SQUARE: "CLICKED_SQUARE",
 };
 
@@ -111,7 +111,7 @@ type StateField<T> = {
 
 interface UpdateAction {
   type: typeof UPDATE_STATE_VALUE;
-  payload: Partial<typeof extGameState>;
+  payload: Partial<GameState>;
 }
 
 export type Action = PayloadAction | NoPayloadAction | UpdateAction;
@@ -123,11 +123,26 @@ export const Game: React.FC<GameProps> = ({
   receivedGameState,
   userId
 }) => {
-  const initialGameState = { ...extGameState };
-  initialGameState.gameType = gameType;
-  initialGameState.currBoard = gameType === "ADD" ? addBoard : multBoard;
-  if (gameObj.xUsername) initialGameState.xUsername = gameObj.xUsername;
-  if (gameObj.oUsername) initialGameState.oUsername = gameObj.oUsername;
+  const initialGameState: GameState = { 
+    currPlayer: startPlayer,
+  randomBoard: false,
+  currBoard: gameType === "ADD" ? addBoard : multBoard,
+  currError: "",
+  currMoves: startMove,
+  activeSquares: emptyStatus(addBoard.length, addBoard[0].length),
+  winSquares: [],
+  winner: "",
+  moveCount: 0,
+  showBoardInstructions: "hidden",
+  lastMoved: [],
+  lockedNumber: null,
+  boardInstructions: "",
+  hideHints: false,
+  gameType: gameType,
+  needsUpdate: true,
+  xUsername: gameObj?.xUsername || "[Your name]",
+  oUsername: gameObj?.oUsername || "[Awaiting opponent]"
+   };
 
   if (!playerIsX) {
     initialGameState.needsUpdate = false;
@@ -135,14 +150,46 @@ export const Game: React.FC<GameProps> = ({
 
   const isMultiplayer = gameObj !== undefined && playerIsX !== undefined;
   
+  const getGameOverMsg = useCallback((state: Partial<GameState>) => {
+    // NOTE: Will only work while deserializer is returning
+    // whole objects, not a smaller delta.
+    // If necessary, usernames could come from initialGameState
+    // instead.
+    if (state.winner && state.winSquares) {
+      return `🎉 Game over. ${!isMultiplayer ? state.winner + " wins!" : (playerIsX ? (state.winner === "X" ? "You win!" : state.oUsername + " wins")
+      : (state.winner === "O" ? "You win!" : state.xUsername + " wins"))} 🎉`;
+    }
+    return "";
+  }, [playerIsX, isMultiplayer]);
+
+  const getMovesResult = useCallback((moves: (number | null)[]) => {
+    let movesSum =
+    moves.length === 2 &&
+    moves[0] !== null &&
+    moves[1] !== null
+      ? moves[0] + moves[1]
+      : undefined;
+
+  let movesProduct =
+    moves.length === 2 &&
+    moves[0] !== null &&
+    moves[1] !== null
+      ? moves[0] * moves[1]
+      : undefined;
+
+   return gameType === "ADD" ? movesSum : movesProduct;
+  }, [gameType]);
+
   const [gameState, dispatch] = useReducer(reducer, initialGameState);
 
+  const movesResult = useMemo(() => getMovesResult(gameState.currMoves), [
+    getMovesResult, gameState.currMoves]);
   const gameOver = gameState.winner === "X" || gameState.winner === "O";
 
   const isYourTurn =
-    isMultiplayer &&
+    !isMultiplayer || (isMultiplayer &&
     ((playerIsX && gameState.currPlayer === "X") ||
-      (!playerIsX && gameState.currPlayer === "O"));
+      (!playerIsX && gameState.currPlayer === "O")));
 
   // const hideMessageTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   function isPayloadAction(action: Action): action is PayloadAction {
@@ -183,30 +230,28 @@ export const Game: React.FC<GameProps> = ({
             lastMoved: state.currMoves,
             currPlayer: (state.currPlayer === "O" ? "X" : "O") as Players,
             lockedNumber: null,
+            moveCount: state.moveCount + 1,
+            needsUpdate: true
           };
           const [winner, winSquares] = checkGameOver(newState);
           if (winner && winSquares) {
             newState = {
               ...newState,
-              currError: `🎉 Game over. ${!isMultiplayer ? winner + " wins!" : (playerIsX ? (winner === "X" ? "You win!" : gameState.oUsername + " wins")
-                          : (winner === "O" ? "You win!" : gameState.xUsername + " wins"))} 🎉`,
               winSquares: winSquares,
-              winner: winner,
-              needsUpdate: true
+              winner: winner
+            }
+            const msg = getGameOverMsg(newState)
+            newState = {
+              ...newState,
+              currError: msg
             }
           }
           return newState;
-        case actions.UPDATE_SQUARE_STATUS:
-          console.warn("---------Dispatch: update square status");
-          return {
-            ...state,
-            activeSquares: action.payload.activeSquares,
-            moveCount: ++state.moveCount,
-          };
         case actions.RESET_GAME:
           // payload should contain newBoard boolean
-          console.log("Resetting game")
-          return {
+          console.log("Resetting game");
+          console.log("Initial: ", initialGameState);
+          const resetState = {
             ...initialGameState,
             randomBoard: action.payload.newBoard,
             currBoard: action.payload.newBoard
@@ -217,7 +262,9 @@ export const Game: React.FC<GameProps> = ({
                 )
               : state.currBoard,
             needsUpdate: true
-          };
+          }
+          console.log(resetState);
+          return resetState;
         default:
             throw new Error("Unknown action type");
       }
@@ -260,49 +307,8 @@ export const Game: React.FC<GameProps> = ({
     }
   }
 
-  function arraysEqual(
-    first: any[] | undefined | null,
-    second: any[] | undefined | null
-  ) {
-    const firstNullish = first ?? undefined;
-    const secondNullish = second ?? undefined;
-    if (firstNullish === undefined && secondNullish === undefined) return true;
-    if (firstNullish === undefined && secondNullish !== undefined) return false;
-    if (firstNullish !== undefined && secondNullish === undefined) return false;
-
-    if (first!.length !== second!.length) return false;
-    for (let i = 0; i < first!.length; ++i) {
-      if (first![i] !== second![i]) {
-        return false;
-      }
-    }
-    return true;
-  }
-
-  function isNoChange(
-    received: GraphQLGame | null | undefined,
-    toSend: UpdateGameInput
-  ) {
-    // WARNING: This will only work with current GraphQL setup.
-    // If return from subscription is shrunk, will no longer work.
-    if (!received) return false;
-
-    if (
-      arraysEqual(received.currBoard, toSend.currBoard) &&
-      arraysEqual(received.activeSquares, toSend.activeSquares) &&
-      arraysEqual(received.currMoves, toSend.currMoves) &&
-      arraysEqual(received.winSquares, toSend.winSquares) &&
-      received.currPlayer === toSend.currPlayer &&
-      received.gameType === toSend.gameType &&
-      received.winner === toSend.winner
-    )
-      return true;
-
-    return false;
-  }
-
   useEffect(() => {
-    if (!gameState.needsUpdate) {
+    if (!gameState.needsUpdate || !isMultiplayer) {
       return;
     }
 
@@ -327,10 +333,10 @@ export const Game: React.FC<GameProps> = ({
       };
       console.log("=============", "Sending update to GraphQL...", input);
       return (API.graphql(
-        graphqlOperation(updateGame, {
-          input: input,
+        graphqlOperation(customUpdateGame, {
+          ...input
         })
-      ) as Promise<GraphQLResult<UpdateGameMutation>>)
+      ) as Promise<GraphQLResult<CustomUpdateGameMutation>>)
         .then((e) => {
           if (e) console.log("Successfully updated DB: ", e);
         })
@@ -342,40 +348,25 @@ export const Game: React.FC<GameProps> = ({
       dispatch( { type: UPDATE_STATE_VALUE, payload: { needsUpdate: false }});
     }
 
-  }, [gameState.needsUpdate, gameObj.id, gameState, gameType, userId]);
+  }, [gameState.needsUpdate, gameObj?.id, gameState, gameType, userId,
+      isMultiplayer]);
 
   const deserialized = useMemo(() => {
     console.log("receivedGameState changed: ", receivedGameState);
     return receivedGameState ? qlToState(receivedGameState) : null;
   }, [receivedGameState]);
-
+  
   useEffect(() => {
     if (deserialized !== null) {
       console.log("Deserialize changed: ", deserialized);
+      let gameOverMsg = "";
+      if (deserialized.winner && deserialized.winSquares) {
+        gameOverMsg = getGameOverMsg(deserialized);
+      }
       dispatch({ type: UPDATE_STATE_VALUE, payload: { ...deserialized,
-      currError: "" } });
+      currError: gameOverMsg } });
     }
-  }, [deserialized]);
-
-  function getMovesResult(state: typeof initialGameState) {
-    let movesSum =
-    state.currMoves.length === 2 &&
-    state.currMoves[0] !== null &&
-    state.currMoves[1] !== null
-      ? state.currMoves[0] + state.currMoves[1]
-      : undefined;
-
-  let movesProduct =
-    state.currMoves.length === 2 &&
-    state.currMoves[0] !== null &&
-    state.currMoves[1] !== null
-      ? state.currMoves[0] * state.currMoves[1]
-      : undefined;
-
-   return gameType === "ADD" ? movesSum : movesProduct;
-  }
-
-  let movesResult = useMemo(() => getMovesResult(gameState), [gameState]);
+  }, [deserialized, getGameOverMsg]);
 
   function getBoardInstructions(
     state: typeof initialGameState
@@ -385,7 +376,7 @@ export const Game: React.FC<GameProps> = ({
     let showBoardInstructions: "" | "hidden" | "active" = "hidden";
     let noMoves = !state.currBoard
       .flat()
-      .map((num) => num === getMovesResult(state))
+      .map((num) => num === getMovesResult(state.currMoves))
       .some((val, idx) => {
         return (
           val &&
@@ -396,7 +387,7 @@ export const Game: React.FC<GameProps> = ({
       });
 
     if (state.currMoves.length === 2 && state.moveCount === 0) {
-      boardInstructions = `👉  Now make your move in a square that matches the ${
+      boardInstructions = `👉  ${isMultiplayer ? "When it's your turn, m" : "M"}ake your move in a square that matches the ${
         gameType === "ADD" ? "sum" : "product"
       } of the numbers you picked!`;
       showBoardInstructions = "active";
@@ -406,7 +397,7 @@ export const Game: React.FC<GameProps> = ({
       // set timeout to disappear after 5 seconds
     } else if (state.currMoves.length === 2 && noMoves) {
       boardInstructions =
-        "Create a new number combination using the buttons above to enable new valid moves";
+        `${isMultiplayer ? "When it's your turn, c" : "C"}reate a new number combination using the buttons above to enable new valid moves`;
       showBoardInstructions = "active";
     }
 
@@ -460,10 +451,10 @@ export const Game: React.FC<GameProps> = ({
 
   return (
     <>
-      {gameObj.roomCode}
-      {" Over: " + gameOver}
+      {gameObj && gameObj.roomCode}
       {gameObj && <div className="challengers"><span className="username">{gameState.xUsername}</span> vs. <span className="username">{gameState.oUsername}</span></div>}
       <ErrorBanner error={gameOver ? "" : gameState.currError} />
+      <button onClick={() => resetGame(true)}>Reset</button>
       <div id="moveStatus" className={gameOver ? "gameOver" : ""}>
         {gameOver ? (
           <GameOverBlock message={gameState.currError} />
@@ -471,7 +462,7 @@ export const Game: React.FC<GameProps> = ({
           <>
             {/* You are player {playerIsX ? "X" : "O"}
             <br /> */}
-            <PlayerBlock player={playerIsX ? "X" : "O"} message={"You are player: "} />
+            { isMultiplayer ? <PlayerBlock player={playerIsX ? "X" : "O"} message={"You are player: "} /> : <PlayerBlock player={gameState.currPlayer} message={"Current player: "} /> }
             {isMultiplayer && (
               <div className={`turn ${isYourTurn ? "yours" : "theirs"}`}>
                 {isYourTurn ? "(Your turn!)" : "(Opponent's turn)"}

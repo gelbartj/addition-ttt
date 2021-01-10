@@ -1,7 +1,7 @@
 import { GameChoice } from "../App";
 
 export type Players = "X" | "O";
-type SquareVal = Players | null;
+export type SquareVal = Players | null;
 
 export function emptyStatus(rows: number, cols: number): SquareVal[][] {
   return [...Array(rows)].map((e) => Array(cols).fill(null));
