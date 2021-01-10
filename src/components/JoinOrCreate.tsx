@@ -2,12 +2,14 @@ import { UPDATE_GLOBALSTATE_VALUE, globalActions } from "../App";
 
 interface JoinOrCreateProps {
   dispatch: any;
-  createGameObj: () => Promise<any>;
+  createGameObj: (arg0?: string) => Promise<any>;
+  username: string;
 }
 
 export const JoinOrCreate: React.FC<JoinOrCreateProps> = ({
   dispatch,
   createGameObj,
+  username
 }) => (
   <div id="pickGame">
     <div>
@@ -17,10 +19,9 @@ export const JoinOrCreate: React.FC<JoinOrCreateProps> = ({
           onClick={() => {
             dispatch({
               type: UPDATE_GLOBALSTATE_VALUE,
-              payload: { isLoading: true,
-            createGameCode: true },
+              payload: { isLoading: true, createGameCode: true },
             });
-            createGameObj()
+            createGameObj(username)
               .then((result) => {
                 console.log("Result: ", result);
                 dispatch({
@@ -35,7 +36,7 @@ export const JoinOrCreate: React.FC<JoinOrCreateProps> = ({
                 dispatch({
                   type: UPDATE_GLOBALSTATE_VALUE,
                   payload: {
-                    currError: e,
+                    currError: e?.errors?.map((err: any) => err?.message),
                     isLoading: false,
                   },
                 });
@@ -43,7 +44,9 @@ export const JoinOrCreate: React.FC<JoinOrCreateProps> = ({
           }}
         >
           <span style={{ fontSize: "2em" }}>🌱 </span>
-          <span style={{ fontSize: "1.5em", fontWeight: "bold" }}>Create game room</span>
+          <span style={{ fontSize: "1.5em", fontWeight: "bold" }}>
+            Create game room
+          </span>
         </button>
         <button
           onClick={() => {
@@ -54,7 +57,9 @@ export const JoinOrCreate: React.FC<JoinOrCreateProps> = ({
           }}
         >
           <span style={{ fontSize: "2em" }}>🔗 </span>
-          <span style={{ fontSize: "1.5em", fontWeight: "bold" }}>Join game room</span>
+          <span style={{ fontSize: "1.5em", fontWeight: "bold" }}>
+            Join game room
+          </span>
           <br />
           (With a code from your friend)
         </button>

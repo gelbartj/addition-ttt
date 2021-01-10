@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useReducer, useState } from "react";
+import { useEffect, useMemo, useReducer } from "react";
 import { GameChoice as GameType } from "../App";
 import {
   addBoard,
@@ -22,14 +22,15 @@ interface GameOverBlockProps {
   message?: string;
 }
 
-interface CurrPlayerBlockProps {
-  currPlayer: Players;
+interface PlayerBlockProps {
+  player: Players;
+  message?: string;
 }
 
-const CurrPlayerBlock: React.FC<CurrPlayerBlockProps> = ({ currPlayer }) => (
+const PlayerBlock: React.FC<PlayerBlockProps> = ({ player, message }) => (
   <>
-    Current player:{" "}
-    <strong className={`currPlayer ${currPlayer}`}>{currPlayer}</strong>
+    { message || "Current player: "}
+    <strong className={`currPlayer ${player}`}>{player}</strong>
   </>
 );
 
@@ -39,12 +40,13 @@ interface GameProps {
   playerIsX?: boolean;
   receivedGameState?: GraphQLGame | null;
   userId?: string;
+  username?: string;
 }
 
 let startPlayer: Players = "X";
 const startMove: (number | null)[] = [];
 
-export const initialGameState = {
+export const extGameState = {
   currPlayer: startPlayer as Players,
   randomBoard: false,
   currBoard: addBoard, // arbitrary, could easily be multboard
@@ -53,7 +55,6 @@ export const initialGameState = {
   activeSquares: emptyStatus(addBoard.length, addBoard[0].length),
   winSquares: [] as number[][],
   winner: "" as "X" | "O" | "",
-  gameOver: false,
   moveCount: 0,
   showBoardInstructions: "" as "" | "active" | "hidden",
   lastMoved: [] as typeof startMove,
@@ -61,7 +62,9 @@ export const initialGameState = {
   boardInstructions: "",
   hideHints: false,
   gameType: "ADD" as GameType, // arbitrary
-  needsUpdate: true
+  needsUpdate: true,
+  xUsername: "[Your name]",
+  oUsername: "[Awaiting opponent]"
 };
 
 const noPayloadActions = {
@@ -100,13 +103,15 @@ interface NoPayloadAction {
 
 export const UPDATE_STATE_VALUE = "UPDATE_STATE_VALUE";
 
+/*
 type StateField<T> = {
   [P in keyof T]?: T[P];
 };
+*/
 
 interface UpdateAction {
   type: typeof UPDATE_STATE_VALUE;
-  payload: Partial<typeof initialGameState>;
+  payload: Partial<typeof extGameState>;
 }
 
 export type Action = PayloadAction | NoPayloadAction | UpdateAction;
@@ -116,14 +121,24 @@ export const Game: React.FC<GameProps> = ({
   gameObj,
   playerIsX,
   receivedGameState,
-  userId,
+  userId
 }) => {
+  const initialGameState = { ...extGameState };
   initialGameState.gameType = gameType;
   initialGameState.currBoard = gameType === "ADD" ? addBoard : multBoard;
+  if (gameObj.xUsername) initialGameState.xUsername = gameObj.xUsername;
+  if (gameObj.oUsername) initialGameState.oUsername = gameObj.oUsername;
 
-  const [gameState, dispatch] = useReducer(reducer, initialGameState);
+  if (!playerIsX) {
+    initialGameState.needsUpdate = false;
+  }
 
   const isMultiplayer = gameObj !== undefined && playerIsX !== undefined;
+  
+  const [gameState, dispatch] = useReducer(reducer, initialGameState);
+
+  const gameOver = gameState.winner === "X" || gameState.winner === "O";
+
   const isYourTurn =
     isMultiplayer &&
     ((playerIsX && gameState.currPlayer === "X") ||
@@ -161,14 +176,26 @@ export const Game: React.FC<GameProps> = ({
           const activeSquaresCopy = [...state.activeSquares];
           const [row, col] = action.payload as number[];
           activeSquaresCopy[row][col] = state.currPlayer;
-          return {
+          let newState = {
             ...state,
             currError: "",
             activeSquares: activeSquaresCopy,
             lastMoved: state.currMoves,
-            currPlayer: state.currPlayer === "O" ? "X" : "O",
+            currPlayer: (state.currPlayer === "O" ? "X" : "O") as Players,
             lockedNumber: null,
           };
+          const [winner, winSquares] = checkGameOver(newState);
+          if (winner && winSquares) {
+            newState = {
+              ...newState,
+              currError: `🎉 Game over. ${!isMultiplayer ? winner + " wins!" : (playerIsX ? (winner === "X" ? "You win!" : gameState.oUsername + " wins")
+                          : (winner === "O" ? "You win!" : gameState.xUsername + " wins"))} 🎉`,
+              winSquares: winSquares,
+              winner: winner,
+              needsUpdate: true
+            }
+          }
+          return newState;
         case actions.UPDATE_SQUARE_STATUS:
           console.warn("---------Dispatch: update square status");
           return {
@@ -178,6 +205,7 @@ export const Game: React.FC<GameProps> = ({
           };
         case actions.RESET_GAME:
           // payload should contain newBoard boolean
+          console.log("Resetting game")
           return {
             ...initialGameState,
             randomBoard: action.payload.newBoard,
@@ -188,16 +216,6 @@ export const Game: React.FC<GameProps> = ({
                   gameType
                 )
               : state.currBoard,
-            needsUpdate: true
-          };
-        case actions.GAME_OVER:
-          // payload should contain winner and winChain
-          return {
-            ...state,
-            currError: `🎉 Game over! ${action.payload.winner} wins 🎉`,
-            gameOver: true,
-            winSquares: action.payload.winChain,
-            winner: action.payload.winner,
             needsUpdate: true
           };
         default:
@@ -225,7 +243,7 @@ export const Game: React.FC<GameProps> = ({
           /*
         case actions.CHECK_GAME_OVER:
           checkGameOver(state);
-          return state;
+          return state; */
         case actions.UPDATE_BOARD_INSTRUCTIONS:
           let [boardInstructions, showBoardInstructions] = getBoardInstructions(
             state
@@ -235,7 +253,7 @@ export const Game: React.FC<GameProps> = ({
             boardInstructions: boardInstructions,
             showBoardInstructions: showBoardInstructions,
           };
-        */
+        
         default:
           throw new Error("Unknown action type");
       }
@@ -305,7 +323,7 @@ export const Game: React.FC<GameProps> = ({
         winner: state.winner,
         currPlayer: state.currPlayer,
         gameType: gameType,
-        lastUpdateBy: userId,
+        lastUpdateBy: userId
       };
       console.log("=============", "Sending update to GraphQL...", input);
       return (API.graphql(
@@ -333,6 +351,7 @@ export const Game: React.FC<GameProps> = ({
 
   useEffect(() => {
     if (deserialized !== null) {
+      console.log("Deserialize changed: ", deserialized);
       dispatch({ type: UPDATE_STATE_VALUE, payload: { ...deserialized,
       currError: "" } });
     }
@@ -394,26 +413,32 @@ export const Game: React.FC<GameProps> = ({
     return [boardInstructions, showBoardInstructions];
   }
 
-  function checkGameOver(state: typeof initialGameState) {
-    if (state.gameOver) return true;
+  function checkGameOver(state: typeof initialGameState): 
+  [Players | null, number[][] | null] {
+    if (state.winner && state.winSquares) {
+        return [state.winner, state.winSquares];
+    }
     for (let row = 0; row < state.activeSquares.length; ++row) {
       for (let col = 0; col < state.activeSquares[0].length; ++col) {
         if (state.activeSquares[row][col]) {
           let winChain = search(row, col, state.activeSquares!);
           if (winChain.length >= 4) {
+            /*
             dispatch({
               type: actions.GAME_OVER,
               payload: {
                 winner: state.activeSquares[row][col],
                 winChain: winChain,
               },
-            });
-            return true;
+            }); 
+            return true; */
+            return [state.activeSquares[row][col]!,
+              winChain]
           }
         }
       }
     }
-    return false;
+    return [null, null];
   }
 
   function resetGame(random: boolean = false) {
@@ -436,18 +461,20 @@ export const Game: React.FC<GameProps> = ({
   return (
     <>
       {gameObj.roomCode}
-      <ErrorBanner error={gameState.gameOver ? "" : gameState.currError} />
-      <div id="moveStatus" className={gameState.gameOver ? "gameOver" : ""}>
-        {gameState.gameOver ? (
+      {" Over: " + gameOver}
+      {gameObj && <div className="challengers"><span className="username">{gameState.xUsername}</span> vs. <span className="username">{gameState.oUsername}</span></div>}
+      <ErrorBanner error={gameOver ? "" : gameState.currError} />
+      <div id="moveStatus" className={gameOver ? "gameOver" : ""}>
+        {gameOver ? (
           <GameOverBlock message={gameState.currError} />
         ) : (
           <>
-            You are player {playerIsX ? "X" : "O"}
-            <br />
-            <CurrPlayerBlock currPlayer={gameState.currPlayer} />
+            {/* You are player {playerIsX ? "X" : "O"}
+            <br /> */}
+            <PlayerBlock player={playerIsX ? "X" : "O"} message={"You are player: "} />
             {isMultiplayer && (
               <div className={`turn ${isYourTurn ? "yours" : "theirs"}`}>
-                {isYourTurn ? "Your turn!" : "Opponent's turn"}
+                {isYourTurn ? "(Your turn!)" : "(Opponent's turn)"}
               </div>
             )}
           </>
@@ -460,12 +487,14 @@ export const Game: React.FC<GameProps> = ({
         gameType={gameType}
         dispatch={dispatch}
         isYourTurn={isYourTurn}
+        gameOver={gameOver}
       />
       <Board
         state={gameState}
         movesResult={movesResult}
         dispatch={dispatch}
         isYourTurn={isYourTurn}
+        gameOver={gameOver}
       />
     </>
   );

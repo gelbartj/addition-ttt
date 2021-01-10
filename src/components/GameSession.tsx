@@ -17,6 +17,7 @@ interface GameSessionProps {
   dispatch: any;
   createdCode: boolean | null;
   userId: string;
+  username: string;
 }
 
 export const GameSession: React.FC<GameSessionProps> = (props) => {
@@ -79,7 +80,7 @@ export const GameSession: React.FC<GameSessionProps> = (props) => {
             )}
             <PickGameBlock setGameType={setGameType} />
           </>
-        ) : (
+        ) : (props.gameObj?.oUsername || receivedGameState?.oUsername) ? (
           <>
             <MultiplayerGame
               gameType={gameType}
@@ -87,9 +88,16 @@ export const GameSession: React.FC<GameSessionProps> = (props) => {
               gameState={receivedGameState}
               userId={props.userId}
               playerIsX={true}
+              username={props.username}
             />
           </>
-        )
+        ) : <div style={{ textAlign: "center" }}>
+        <h2 style={{ fontWeight: "normal" }}>
+          Game room successfully created.
+        </h2>
+        Room code: <span className="roomCode">{props.gameObj.roomCode}</span>
+        <h3>Waiting on partner to join...</h3>
+      </div>
       ) : (
         <>
           {props.gameObj ? (
@@ -100,13 +108,14 @@ export const GameSession: React.FC<GameSessionProps> = (props) => {
                 gameState={receivedGameState}
                 userId={props.userId}
                 playerIsX={false}
+                username={props.username}
               />
             ) : (
               <div style={{ textAlign: "center" }}>
                 <h2 style={{ fontWeight: "normal" }}>
                   Game room successfully joined.
                 </h2>
-                <h3>Waiting on partner to select game type.</h3>
+                <h3>Waiting on partner to select game type...</h3>
               </div>
             )
           ) : (
@@ -114,7 +123,7 @@ export const GameSession: React.FC<GameSessionProps> = (props) => {
               <div style={{ marginBottom: "10px" }}>
                 Error joining game. Please try again:
               </div>
-              <JoinCode dispatch={props.dispatch} />
+              <JoinCode dispatch={props.dispatch} username={props.username} />
             </div>
           )}
         </>

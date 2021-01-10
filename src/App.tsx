@@ -19,8 +19,9 @@ Amplify.configure(awsconfig);
 
 export type GameChoice = "ADD" | "MULT" | "ALG" | null;
 
-async function createGameObj() {
-  const game = { roomCode: makeRoomCode() };
+async function createGameObj(username?: string) {
+  // Creator is always player X
+  const game = { roomCode: makeRoomCode(), xUsername: username  };
   return await API.graphql(graphqlOperation(createGame, {input: game}));
 }
 
@@ -91,12 +92,12 @@ function App() {
   const MultiplayerSetup = () => {
     return globalState.createGameCode === null ? <>
       <h1>Ok, now:</h1>
-      <JoinOrCreate dispatch={globalDispatch} createGameObj={createGameObj} />
+      <JoinOrCreate dispatch={globalDispatch} createGameObj={createGameObj} username={globalState.username} />
     </> : 
     globalState.createGameCode ?
     (globalState.isLoading ? <>Creating your remote game<Loading dotsOnly={true} /></> : <></>)
     : (globalState.isLoading ? <>Joining remote game<Loading dotsOnly={true} /></> : 
-    <><h1>Enter the code your friend sent you.</h1><JoinCode dispatch={globalDispatch} /></>)
+    <><h1>Enter the code your friend sent you.</h1><JoinCode username={globalState.username} dispatch={globalDispatch} /></>)
   }
 
   const isReady = globalState.currError === "" && (globalState.isMultiplayer ? globalState.APIgameObj
@@ -122,9 +123,9 @@ function App() {
     : (globalState.isMultiplayer && !globalState.APIgameObj) ? <MultiplayerSetup /> 
     : ""}
     </div>
-    { globalState.currError && <div style={{backgroundColor:"salmon"}}>Oh no! There was an error: {globalState.currError}</div>}
+    { globalState.currError && <div id="moveError" className="active">Oh no! There was an error: {globalState.currError}</div>}
     { isReady ? <GameSession createdCode={globalState.createGameCode} userId={generatedUserId}
-      gameObj={ globalState.APIgameObj } dispatch={globalDispatch} /> : <FloatingSymbols /> }
+      gameObj={ globalState.APIgameObj } dispatch={globalDispatch} username={ globalState.username } /> : <FloatingSymbols /> }
     </main>
     </>
   );

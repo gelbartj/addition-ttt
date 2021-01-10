@@ -1,13 +1,14 @@
 import { GameChoice } from "../App";
-import { Action, actions, initialGameState, UPDATE_STATE_VALUE } from "./Game";
+import { Action, actions, extGameState, UPDATE_STATE_VALUE } from "./Game";
 
 interface MovesProps {
-  state: typeof initialGameState;
+  state: typeof extGameState;
   moves: number[];
   movesResult?: number;
   gameType: GameChoice;
   dispatch: React.Dispatch<Action>;
   isYourTurn: boolean;
+  gameOver: boolean;
 }
 
 export const Moves: React.FC<MovesProps> = (props) => {
@@ -99,22 +100,22 @@ export const Moves: React.FC<MovesProps> = (props) => {
   return (
     <div id="moveBlock">
       <div id="moves">
-        {props.state.gameOver ? (
+        {(props.gameOver) ? (
           ""
         ) : (
           <span
             id="moveInstructions"
             className={`${
-              props.state.currMoves.length === 0 ? "highlight" : ""
+              (props.state.currMoves.length <= 1 && props.isYourTurn) ? "highlight" : ""
             }`}
           >
-            {props.state.currMoves.length === 0 ? "👉  " : ""}Select two numbers
-            to {props.gameType ? "add" : "multiply"} together (change one
+            {props.state.currMoves.length <= 1 ? "👉  " : ""}Select two numbers
+            to {props.gameType === "ADD" ? "add" : "multiply"} together (change one
             number per turn):
           </span>
         )}
         <div id="moveButtons">
-          {props.state.gameOver
+          {props.gameOver
             ? ""
             : props.moves.map((move) => (
                 <button
@@ -134,13 +135,13 @@ export const Moves: React.FC<MovesProps> = (props) => {
               ))}
         </div>
       </div>
-      <div id="movesResult" className={props.movesResult ? "" : "hidden"}>
-        {props.movesResult !== undefined && !props.state.gameOver
-          ? `${props.state.currMoves[0]} ${props.gameType ? "+" : "\u2715"} ${
+      { !props.gameOver && <div id="movesResult" className={props.movesResult ? "" : "hidden"}>
+        {props.movesResult !== undefined && !props.gameOver
+          ? `${props.state.currMoves[0]} ${props.gameType === "ADD" ? "+" : "\u2715"} ${
               props.state.currMoves[1]
             } = ${props.movesResult}`
           : ""}
-      </div>
+      </div> }
     </div>
   );
 };

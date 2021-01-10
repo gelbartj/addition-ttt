@@ -1,16 +1,17 @@
 import { useRef } from "react";
-import { Action, actions, initialGameState, UPDATE_STATE_VALUE } from "./Game";
+import { Action, actions, extGameState, UPDATE_STATE_VALUE } from "./Game";
 
 interface BoardProps {
-  state: typeof initialGameState;
+  state: typeof extGameState;
   dispatch: React.Dispatch<Action>;
   movesResult: number | undefined;
   isYourTurn: boolean;
+  gameOver: boolean;
 }
 
 export const Board: React.FC<BoardProps> = (props) => {
   function setSquareStatus(row: number, col: number) {
-    if (props.state.gameOver) return;
+    if (props.gameOver) return;
     if (!props.isYourTurn) {
       props.dispatch({
         type: UPDATE_STATE_VALUE,
@@ -44,7 +45,7 @@ export const Board: React.FC<BoardProps> = (props) => {
     }
     props.dispatch({ type: actions.CLICKED_SQUARE,
       payload: [row, col] });
-    // props.dispatch({ type: actions.UPDATE_BOARD_INSTRUCTIONS });
+    props.dispatch({ type: actions.UPDATE_BOARD_INSTRUCTIONS });
     // props.dispatch({ type: actions.CHECK_GAME_OVER });
     props.dispatch({ type: actions.SYNC_DB });
   }
@@ -75,6 +76,7 @@ export const Board: React.FC<BoardProps> = (props) => {
         {props.state.boardInstructions}
         {props.state.showBoardInstructions && <HideHints />}
       </div>
+      { "board: "}{ props.state.currBoard }
       <div id="board" ref={boardRef}>
         {props.state.currBoard.map((boardRow, rowIdx) => (
           <div className="boardRow" key={rowIdx}>
@@ -101,7 +103,7 @@ export const Board: React.FC<BoardProps> = (props) => {
                               winSquare[0] === rowIdx && winSquare[1] === colIdx
                           )
                             ? "winner"
-                            : props.state.gameOver
+                            : props.gameOver
                             ? "inactive"
                             : ""
                         }
