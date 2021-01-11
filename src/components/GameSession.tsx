@@ -1,6 +1,6 @@
 import { API, graphqlOperation } from "aws-amplify";
 import React, { useEffect, useState } from "react";
-import { GameChoice } from "../App";
+import { debugLog, GameChoice } from "../App";
 import { FloatingSymbols } from "./FloatingSymbols";
 import { Game } from "./Game";
 import { JoinCode } from "./JoinCode";
@@ -22,7 +22,10 @@ interface GameSessionProps {
 
 export const GameSession: React.FC<GameSessionProps> = (props) => {
   const [gameType, setGameType] = useState<GameChoice>(null);
-  const [receivedGameState, setReceivedGameState] = useState<GraphQLGame | null>(null);
+  const [
+    receivedGameState,
+    setReceivedGameState,
+  ] = useState<GraphQLGame | null>(null);
 
   useEffect(() => {
     // Not sure why this doesn't have to be marked async
@@ -30,34 +33,42 @@ export const GameSession: React.FC<GameSessionProps> = (props) => {
       return;
     }
     const subscriptionQuery = API.graphql(
-      graphqlOperation(updatedGameById, {  roomCode: props.gameObj.roomCode })
+      graphqlOperation(updatedGameById, { roomCode: props.gameObj.roomCode })
     ) as Observable<any>;
     const subscription = subscriptionQuery.subscribe({
       next: ({ value }) => {
-        console.log("======", "Got new item from subscription: ", value);
+        debugLog("======", "Got new item from subscription: ", value);
         if (value?.data?.updatedGameByID?.roomCode !== props.gameObj.roomCode) {
-          console.warn("Got update for another room! BAD!")
+          console.warn("Got update for another room! BAD!");
           return;
         }
-        console.log("Comparing lastUpdateBy to userId: ", value?.data?.updatedGameByID?.lastUpdateBy, props.userId);
+        debugLog(
+          "Comparing lastUpdateBy to userId: ",
+          value?.data?.updatedGameByID?.lastUpdateBy,
+          props.userId
+        );
         if (value?.data?.updatedGameByID?.lastUpdateBy === props.userId) {
-            console.log("Own update, skipping");
-            return;
-        }
-        else {
-            console.log("Updating receivedGameState");
-            setReceivedGameState(value?.data?.updatedGameByID as GraphQLGame);
+          debugLog("Own update, skipping");
+          return;
+        } else {
+          debugLog("Updating receivedGameState");
+          setReceivedGameState(value?.data?.updatedGameByID as GraphQLGame);
         }
       },
       error: ({ errorValue }) => {
-          console.error("Subscription error: ", errorValue);
-      }
+        debugLog("error", "Subscription error: ", errorValue);
+      },
     });
 
     return () => {
       if (subscription) subscription.unsubscribe();
     };
-  }, [props.createdCode, props.gameObj?.id, props.userId]);
+  }, [
+    props.createdCode,
+    props.gameObj?.id,
+    props.userId,
+    props.gameObj?.roomCode,
+  ]);
 
   return (
     <>
@@ -85,7 +96,7 @@ export const GameSession: React.FC<GameSessionProps> = (props) => {
             )}
             <PickGameBlock setGameType={setGameType} />
           </>
-        ) : (props.gameObj?.oUsername || receivedGameState?.oUsername) ? (
+        ) : props.gameObj?.oUsername || receivedGameState?.oUsername ? (
           <>
             <MultiplayerGame
               gameType={gameType}
@@ -96,17 +107,20 @@ export const GameSession: React.FC<GameSessionProps> = (props) => {
               username={props.username}
             />
           </>
-        ) : <div style={{ textAlign: "center" }}>
-        <h2 style={{ fontWeight: "normal" }}>
-          Game room successfully created.
-        </h2>
-        Room code: <span className="roomCode">{props.gameObj.roomCode}</span>
-        <h3>Waiting on partner to join...</h3>
-      </div>
+        ) : (
+          <div style={{ textAlign: "center" }}>
+            <h2 style={{ fontWeight: "normal" }}>
+              Game room successfully created.
+            </h2>
+            Room code:{" "}
+            <span className="roomCode">{props.gameObj.roomCode}</span>
+            <h3>Waiting on partner to join...</h3>
+          </div>
+        )
       ) : (
         <>
           {props.gameObj ? (
-            (props.gameObj.gameType || receivedGameState?.gameType) ? (
+            props.gameObj.gameType || receivedGameState?.gameType ? (
               <MultiplayerGame
                 gameType={props.gameObj.gameType || receivedGameState?.gameType}
                 gameObj={props.gameObj}

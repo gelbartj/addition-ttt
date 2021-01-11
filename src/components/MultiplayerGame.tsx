@@ -19,10 +19,10 @@ export const MultiplayerGame: React.FC<MultiplayerGameProps> = (props) => {
     gameType: props.gameType,
     gameObj: props.gameObj,
     playerIsX: props.playerIsX,
-    username: props.username
-  }
+    username: props.username,
+  };
 
-  return <Game {...gameProps}  />
-}
+  return <Game {...gameProps} />;
+};
 
 export default MultiplayerGame;

@@ -1,4 +1,4 @@
-import { GameChoice } from "../App";
+import { debugLog, GameChoice } from "../App";
 import { Action, actions, GameState, UPDATE_STATE_VALUE } from "./Game";
 
 interface MovesProps {
@@ -16,7 +16,7 @@ export const Moves: React.FC<MovesProps> = (props) => {
     if (!props.isYourTurn) {
       props.dispatch({
         type: UPDATE_STATE_VALUE,
-        payload: { currError: "It's not your turn!" }
+        payload: { currError: "It's not your turn!" },
       });
       return;
     }
@@ -75,16 +75,16 @@ export const Moves: React.FC<MovesProps> = (props) => {
           type: UPDATE_STATE_VALUE,
           payload: { lockedNumber: move },
         });
-        console.log("Player was ", props.state.currPlayer);
+        debugLog("Player was ", props.state.currPlayer);
         props.dispatch({ type: actions.TOGGLE_PLAYER });
-        console.log("After toggle, player is ", props.state.currPlayer);
+        debugLog("After toggle, player is ", props.state.currPlayer);
       }
       props.dispatch({
         type: actions.ADD_CLICKED_MOVE,
         payload: { move: move },
       });
       props.dispatch({ type: actions.UPDATE_BOARD_INSTRUCTIONS });
-      console.log("ABOUT TO SYNC DB");
+      debugLog("ABOUT TO SYNC DB");
       props.dispatch({ type: actions.SYNC_DB });
     } else {
       props.dispatch({
@@ -100,18 +100,20 @@ export const Moves: React.FC<MovesProps> = (props) => {
   return (
     <div id="moveBlock">
       <div id="moves">
-        {(props.gameOver) ? (
+        {props.gameOver ? (
           ""
         ) : (
           <span
             id="moveInstructions"
             className={`${
-              (props.state.currMoves.length <= 1 && props.isYourTurn) ? "highlight" : ""
+              props.state.currMoves.length <= 1 && props.isYourTurn
+                ? "highlight"
+                : ""
             }`}
           >
             {props.state.currMoves.length <= 1 ? "👉  " : ""}Select two numbers
-            to {props.gameType === "ADD" ? "add" : "multiply"} together (change one
-            number per turn):
+            to {props.gameType === "ADD" ? "add" : "multiply"} together (change
+            one number per turn):
           </span>
         )}
         <div id="moveButtons">
@@ -135,13 +137,15 @@ export const Moves: React.FC<MovesProps> = (props) => {
               ))}
         </div>
       </div>
-      { !props.gameOver && <div id="movesResult" className={props.movesResult ? "" : "hidden"}>
-        {props.movesResult !== undefined && !props.gameOver
-          ? `${props.state.currMoves[0]} ${props.gameType === "ADD" ? "+" : "\u2715"} ${
-              props.state.currMoves[1]
-            } = ${props.movesResult}`
-          : ""}
-      </div> }
+      {!props.gameOver && (
+        <div id="movesResult" className={props.movesResult ? "" : "hidden"}>
+          {props.movesResult !== undefined && !props.gameOver
+            ? `${props.state.currMoves[0]} ${
+                props.gameType === "ADD" ? "+" : "\u2715"
+              } ${props.state.currMoves[1]} = ${props.movesResult}`
+            : ""}
+        </div>
+      )}
     </div>
   );
 };

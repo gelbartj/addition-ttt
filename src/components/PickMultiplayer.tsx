@@ -5,7 +5,7 @@ interface PickMultiplayerProps {
 }
 
 export const PickMultiplayer: React.FC<PickMultiplayerProps> = ({
-  dispatch
+  dispatch,
 }) => (
   <div id="pickGame">
     <div>

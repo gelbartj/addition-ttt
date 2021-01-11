@@ -15,7 +15,7 @@ export const Board: React.FC<BoardProps> = (props) => {
     if (!props.isYourTurn) {
       props.dispatch({
         type: UPDATE_STATE_VALUE,
-        payload: { currError: "It's not your turn!" }
+        payload: { currError: "It's not your turn!" },
       });
       return;
     }
@@ -43,8 +43,7 @@ export const Board: React.FC<BoardProps> = (props) => {
       });
       return;
     }
-    props.dispatch({ type: actions.CLICKED_SQUARE,
-      payload: [row, col] });
+    props.dispatch({ type: actions.CLICKED_SQUARE, payload: [row, col] });
     props.dispatch({ type: actions.UPDATE_BOARD_INSTRUCTIONS });
     // props.dispatch({ type: actions.CHECK_GAME_OVER });
     props.dispatch({ type: actions.SYNC_DB });
@@ -70,14 +69,17 @@ export const Board: React.FC<BoardProps> = (props) => {
       <div
         id="boardInstructions"
         className={
-          (props.state.hideHints) ? "hidden" : props.state.showBoardInstructions
+          props.state.hideHints ? "hidden" : props.state.showBoardInstructions
         }
       >
-        <div id="boardInstructionsContent" className={
-          (props.state.hideHints) ? "hidden" : props.state.showBoardInstructions
-        }>
-        {props.state.boardInstructions}
-        {props.state.showBoardInstructions && <HideHints />}
+        <div
+          id="boardInstructionsContent"
+          className={
+            props.state.hideHints ? "hidden" : props.state.showBoardInstructions
+          }
+        >
+          {props.state.boardInstructions}
+          {props.state.showBoardInstructions && <HideHints />}
         </div>
       </div>
       <div id="board" ref={boardRef}>

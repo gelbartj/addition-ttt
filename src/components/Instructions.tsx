@@ -1,3 +1,5 @@
+import { debugLog } from "../App";
+
 export const Instructions = (props: any) => (
     <>
       <ul className="instructions">
@@ -7,7 +9,7 @@ export const Instructions = (props: any) => (
         </li>
         <li>Then keep making new moves until you get four in a row!</li>
       </ul>
-      <button onClick={() => console.log("board instructions hidden")}>
+      <button onClick={() => debugLog("board instructions hidden")}>
         Dismiss
       </button>
     </>

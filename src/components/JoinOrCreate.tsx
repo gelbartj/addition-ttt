@@ -1,4 +1,4 @@
-import { UPDATE_GLOBALSTATE_VALUE, globalActions } from "../App";
+import { UPDATE_GLOBALSTATE_VALUE, globalActions, debugLog } from "../App";
 
 interface JoinOrCreateProps {
   dispatch: any;
@@ -9,7 +9,7 @@ interface JoinOrCreateProps {
 export const JoinOrCreate: React.FC<JoinOrCreateProps> = ({
   dispatch,
   createGameObj,
-  username
+  username,
 }) => (
   <div id="pickGame">
     <div>
@@ -23,7 +23,7 @@ export const JoinOrCreate: React.FC<JoinOrCreateProps> = ({
             });
             createGameObj(username)
               .then((result) => {
-                console.log("Result: ", result);
+                debugLog("Result: ", result);
                 dispatch({
                   type: globalActions.CREATE_GAME,
                   payload: {
@@ -32,7 +32,7 @@ export const JoinOrCreate: React.FC<JoinOrCreateProps> = ({
                 });
               })
               .catch((e) => {
-                console.error("Join or create error: ", e);
+                debugLog("error", "Join or create error: ", e);
                 dispatch({
                   type: UPDATE_GLOBALSTATE_VALUE,
                   payload: {

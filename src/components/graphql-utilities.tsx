@@ -1,3 +1,4 @@
+import { debugLog } from "../App";
 import { GameState } from "./Game";
 
 export interface GraphQLGame {
@@ -19,7 +20,7 @@ export interface GraphQLGame {
 
 function reshapeFlatBoard(flat: any[], rows = 8, cols = 8) {
   if (flat.length !== rows * cols) {
-    console.error("Received board with mismatched size");
+    debugLog("error", "Received board with mismatched size");
     return null;
   }
   const newBoard = [...Array(rows)].map((e) => Array(cols).fill(null));
@@ -49,7 +50,7 @@ export function qlToState(ql: GraphQLGame) {
       if (reshapedBoard) {
         newState.currBoard = reshapedBoard;
       } else {
-        console.error("Failed to deserialize boardNums");
+        debugLog("error", "Failed to deserialize boardNums");
         return newState;
       }
     } 
@@ -60,7 +61,7 @@ export function qlToState(ql: GraphQLGame) {
       if (reshapedBoard) {
         newState.activeSquares = reshapedBoard;
       } else {
-        console.error("Failed to deserialize currBoard");
+        debugLog("error", "Failed to deserialize currBoard");
         return newState;
       }
     } /* else {
@@ -75,7 +76,7 @@ export function qlToState(ql: GraphQLGame) {
   if (ql.winSquares !== undefined) {
     if ((ql.winSquares?.length || 0) > 0) {
       if (ql.winSquares.length % 2 !== 0) {
-        console.error(
+        debugLog("error", 
           "Failed to deserialize winSquares: invalid board shape"
         );
         return newState;
@@ -86,7 +87,7 @@ export function qlToState(ql: GraphQLGame) {
       if (reshapedBoard) {
         newState.winSquares = reshapedBoard;
       } else {
-        console.error("Failed to deserialize winSquares");
+        debugLog("error", "Failed to deserialize winSquares");
         return newState;
       }
     } else {
