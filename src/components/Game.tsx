@@ -284,7 +284,9 @@ export const Game: React.FC<GameProps> = ({
                   gameType
                 )
               : state.currBoard,
-            needsUpdate: true,
+            xUsername: state.xUsername,
+            oUsername: state.oUsername, // unclear why I need this, but it's not saved in initial
+            needsUpdate: true
           };
           debugLog(resetState);
           return resetState;
@@ -420,7 +422,7 @@ export const Game: React.FC<GameProps> = ({
 
     if (state.currMoves.length === 2 && state.moveCount === 0) {
       boardInstructions = `👉  ${
-        isMultiplayer ? "When it's your turn, m" : "M"
+        (isMultiplayer && !getIsYourTurn(state.currPlayer)) ? "When it's your turn, m" : "M"
       }ake your move in a square that matches the ${
         gameType === "ADD" ? "sum" : "product"
       } of the numbers you picked!`;
@@ -436,7 +438,7 @@ export const Game: React.FC<GameProps> = ({
       // set timeout to disappear after 5 seconds
     } else if (state.currMoves.length === 2 && noMoves) {
       boardInstructions = `${
-        isMultiplayer ? "When it's your turn, c" : "C"
+        (isMultiplayer && !getIsYourTurn(state.currPlayer)) ? "When it's your turn, c" : "C"
       }reate a new number combination using the buttons above to enable new valid moves`;
       showBoardInstructions = "active";
     }
@@ -491,7 +493,7 @@ export const Game: React.FC<GameProps> = ({
 
   return (
     <>
-      {gameObj && gameObj.roomCode}
+      {/* gameObj && gameObj.roomCode */}
       {gameObj && (
         <div className="challengers">
           <span className="username">{gameState.xUsername}</span> vs.{" "}
@@ -499,7 +501,7 @@ export const Game: React.FC<GameProps> = ({
         </div>
       )}
       <ErrorBanner error={gameOver ? "" : gameState.currError} />
-      <button onClick={() => resetGame(true)}>Reset</button>
+      {/* <button onClick={() => resetGame(true)}>Reset</button> */}
       <div id="moveStatus" className={gameOver ? "gameOver" : ""}>
         {gameOver ? (
           <GameOverBlock message={gameState.currError} />
@@ -542,6 +544,13 @@ export const Game: React.FC<GameProps> = ({
         isYourTurn={isYourTurn}
         gameOver={gameOver}
       />
+      <div style={{textAlign: "center"}}>
+      <button className="passButton" onClick={() => {
+        dispatch({ type: actions.TOGGLE_PLAYER });
+        dispatch({ type: actions.SYNC_DB });
+      }}
+        disabled={!isYourTurn}>Pass</button>
+      </div>
     </>
   );
 };

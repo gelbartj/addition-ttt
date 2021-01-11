@@ -431,6 +431,12 @@ body {
   color: orange;
 }
 
+.passButton {
+  border-radius: 3px;
+  padding: 5px;
+  cursor: pointer;
+}
+
 @-webkit-keyframes mathsymbols-fall {
   0% {
     top: -10%;
