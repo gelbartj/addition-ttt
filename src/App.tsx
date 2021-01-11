@@ -11,8 +11,8 @@ import Loading from "./components/Loading";
 import { FloatingSymbols } from "./components/FloatingSymbols";
 import { JoinOrCreate } from "./components/JoinOrCreate";
 import { JoinCode } from "./components/JoinCode";
-import { listGames } from "./graphql/queries";
-import { ListGamesQuery } from "./API";
+import { getGame } from "./graphql/queries";
+import { GetGameQuery } from "./API";
 import { GraphQLResult } from "@aws-amplify/api";
 
 Amplify.configure(awsconfig);
@@ -21,13 +21,15 @@ export type GameChoice = "ADD" | "MULT" | "ALG" | null;
 
 async function createGameObj(username?: string) {
   // Creator is always player X
-  const game = { roomCode: makeRoomCode(), xUsername: username  };
+  const code = makeRoomCode()
+  const game = { id: code, roomCode: code, xUsername: username  };
   return await API.graphql(graphqlOperation(createGame, {input: game}));
 }
 
 export async function getGameObj(code: string) {
-  const game = { roomCode: { eq: code.trim().toUpperCase() }};
-  return await API.graphql(graphqlOperation(listGames, {filter: game})) as GraphQLResult<ListGamesQuery>;
+  // const game = { roomCode: { eq: code.trim().toUpperCase() }};
+  // return await API.graphql(graphqlOperation(listGames, {filter: game})) as GraphQLResult<ListGamesQuery>;
+  return await API.graphql(graphqlOperation(getGame, {id: code.trim().toUpperCase() })) as GraphQLResult<GetGameQuery>;
 }
 
 export const UPDATE_GLOBALSTATE_VALUE = "UPDATE_GLOBALSTATE_VALUE";

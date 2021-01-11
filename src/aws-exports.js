@@ -21,11 +21,10 @@ const awsmobile = {
         "responseType": "code"
     },
     "federationTarget": "COGNITO_USER_POOLS",
-    "aws_appsync_graphqlEndpoint": "http://192.168.0.102:20002/graphql",
+    "aws_appsync_graphqlEndpoint": "https://iwatukwgybdg5pizabdthswbcu.appsync-api.us-east-2.amazonaws.com/graphql",
     "aws_appsync_region": "us-east-2",
     "aws_appsync_authenticationType": "API_KEY",
-    "aws_appsync_apiKey": "da2-fakeApiId123456",
-    "aws_appsync_dangerously_connect_to_http_endpoint_for_testing": true
+    "aws_appsync_apiKey": "da2-fwpgxnfy45ddtlwyey3bfibil4"
 };
 
 

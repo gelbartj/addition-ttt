@@ -14,8 +14,8 @@ import { ErrorBanner } from "./ErrorBanner";
 import { Moves } from "./Moves";
 import { Board } from "./Board";
 import { API, graphqlOperation } from "aws-amplify";
-import { customUpdateGame } from "../graphql/mutations";
-import { UpdateGameInput, CustomUpdateGameMutation } from "../API";
+import { updateGame } from "../graphql/mutations";
+import { UpdateGameInput, UpdateGameMutation } from "../API";
 import { GraphQLGame, qlToState } from "./graphql-utilities";
 import { GraphQLResult } from "@aws-amplify/api";
 
@@ -180,6 +180,10 @@ export const Game: React.FC<GameProps> = ({
    return gameType === "ADD" ? movesSum : movesProduct;
   }, [gameType]);
 
+  const getIsYourTurn = (currPlayer: Players) => !isMultiplayer || (isMultiplayer &&
+    ((playerIsX && currPlayer === "X") ||
+      (!playerIsX && currPlayer === "O")));
+
   const [gameState, dispatch] = useReducer(reducer, initialGameState);
 
   const movesResult = useMemo(() => getMovesResult(gameState.currMoves), [
@@ -190,6 +194,8 @@ export const Game: React.FC<GameProps> = ({
     !isMultiplayer || (isMultiplayer &&
     ((playerIsX && gameState.currPlayer === "X") ||
       (!playerIsX && gameState.currPlayer === "O")));
+    
+
 
   // const hideMessageTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   function isPayloadAction(action: Action): action is PayloadAction {
@@ -329,14 +335,13 @@ export const Game: React.FC<GameProps> = ({
         winner: state.winner,
         currPlayer: state.currPlayer,
         gameType: gameType,
-        lastUpdateBy: userId
+        lastUpdateBy: userId,
+        roomCode: gameObj.roomCode
       };
       console.log("=============", "Sending update to GraphQL...", input);
       return (API.graphql(
-        graphqlOperation(customUpdateGame, {
-          ...input
-        })
-      ) as Promise<GraphQLResult<CustomUpdateGameMutation>>)
+        graphqlOperation(updateGame, { input: input })
+      ) as Promise<GraphQLResult<UpdateGameMutation>>)
         .then((e) => {
           if (e) console.log("Successfully updated DB: ", e);
         })
@@ -391,7 +396,8 @@ export const Game: React.FC<GameProps> = ({
         gameType === "ADD" ? "sum" : "product"
       } of the numbers you picked!`;
       showBoardInstructions = "active";
-    } else if (state.moveCount === 1 && !noMoves) {
+    } else if (state.moveCount === 1 && !noMoves && (!isMultiplayer || !getIsYourTurn(state.currPlayer))) {
+      // Show this message after turn has switched to the other player
       boardInstructions = "Nice choice!";
       showBoardInstructions = "active";
       // set timeout to disappear after 5 seconds

@@ -3,8 +3,8 @@
 // this is an auto generated file. This will be overwritten
 
 export const updatedGameById = /* GraphQL */ `
-  subscription UpdatedGameById($id: ID!) {
-    updatedGameByID(id: $id) {
+  subscription UpdatedGameById($roomCode: String!) {
+    updatedGameByID(roomCode: $roomCode) {
       id
       roomCode
       currBoard

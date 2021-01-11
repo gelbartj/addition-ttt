@@ -1,17 +1,27 @@
 type Game {
   id: ID!
   roomCode: String!
-  boardNums: [Int]
-  currBoard: [String]
-  moveNums: [Int]
-  currMoves: [Boolean]
+  currBoard: [Int]
+  activeSquares: [String]
+  moveCount: Int
+  currMoves: [Int]
   gameType: String
   playerIDs: [String]
   xUsername: String
   oUsername: String
   winner: String
+  winSquares: [Int]
+  currPlayer: String
+  lastUpdateBy: String
   createdAt: AWSDateTime!
   updatedAt: AWSDateTime!
+}
+
+type Subscription {
+  updatedGameByID(roomCode: String!): Game @aws_subscribe(mutations: ["updateGame"])
+  onCreateGame: Game @aws_subscribe(mutations: ["createGame"])
+  onUpdateGame: Game @aws_subscribe(mutations: ["updateGame"])
+  onDeleteGame: Game @aws_subscribe(mutations: ["deleteGame"])
 }
 
 enum ModelSortDirection {
@@ -100,15 +110,18 @@ input ModelSizeInput {
 input ModelGameFilterInput {
   id: ModelIDInput
   roomCode: ModelStringInput
-  boardNums: ModelIntInput
-  currBoard: ModelStringInput
-  moveNums: ModelIntInput
-  currMoves: ModelBooleanInput
+  currBoard: ModelIntInput
+  activeSquares: ModelStringInput
+  moveCount: ModelIntInput
+  currMoves: ModelIntInput
   gameType: ModelStringInput
   playerIDs: ModelStringInput
   xUsername: ModelStringInput
   oUsername: ModelStringInput
   winner: ModelStringInput
+  winSquares: ModelIntInput
+  currPlayer: ModelStringInput
+  lastUpdateBy: ModelStringInput
   and: [ModelGameFilterInput]
   or: [ModelGameFilterInput]
   not: ModelGameFilterInput
@@ -135,29 +148,35 @@ type Query {
 input CreateGameInput {
   id: ID
   roomCode: String!
-  boardNums: [Int]
-  currBoard: [String]
-  moveNums: [Int]
-  currMoves: [Boolean]
+  currBoard: [Int]
+  activeSquares: [String]
+  moveCount: Int
+  currMoves: [Int]
   gameType: String
   playerIDs: [String]
   xUsername: String
   oUsername: String
   winner: String
+  winSquares: [Int]
+  currPlayer: String
+  lastUpdateBy: String
 }
 
 input UpdateGameInput {
   id: ID!
   roomCode: String
-  boardNums: [Int]
-  currBoard: [String]
-  moveNums: [Int]
-  currMoves: [Boolean]
+  currBoard: [Int]
+  activeSquares: [String]
+  moveCount: Int
+  currMoves: [Int]
   gameType: String
   playerIDs: [String]
   xUsername: String
   oUsername: String
   winner: String
+  winSquares: [Int]
+  currPlayer: String
+  lastUpdateBy: String
 }
 
 input DeleteGameInput {
@@ -172,22 +191,19 @@ type Mutation {
 
 input ModelGameConditionInput {
   roomCode: ModelStringInput
-  boardNums: ModelIntInput
-  currBoard: ModelStringInput
-  moveNums: ModelIntInput
-  currMoves: ModelBooleanInput
+  currBoard: ModelIntInput
+  activeSquares: ModelStringInput
+  moveCount: ModelIntInput
+  currMoves: ModelIntInput
   gameType: ModelStringInput
   playerIDs: ModelStringInput
   xUsername: ModelStringInput
   oUsername: ModelStringInput
   winner: ModelStringInput
+  winSquares: ModelIntInput
+  currPlayer: ModelStringInput
+  lastUpdateBy: ModelStringInput
   and: [ModelGameConditionInput]
   or: [ModelGameConditionInput]
   not: ModelGameConditionInput
-}
-
-type Subscription {
-  onCreateGame: Game @aws_subscribe(mutations: ["createGame"])
-  onUpdateGame: Game @aws_subscribe(mutations: ["updateGame"])
-  onDeleteGame: Game @aws_subscribe(mutations: ["deleteGame"])
 }

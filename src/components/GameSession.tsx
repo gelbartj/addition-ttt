@@ -30,14 +30,19 @@ export const GameSession: React.FC<GameSessionProps> = (props) => {
       return;
     }
     const subscriptionQuery = API.graphql(
-      graphqlOperation(updatedGameById, {  id: props.gameObj.id })
+      graphqlOperation(updatedGameById, {  roomCode: props.gameObj.roomCode })
     ) as Observable<any>;
     const subscription = subscriptionQuery.subscribe({
       next: ({ value }) => {
         console.log("======", "Got new item from subscription: ", value);
+        if (value?.data?.updatedGameByID?.roomCode !== props.gameObj.roomCode) {
+          console.warn("Got update for another room! BAD!")
+          return;
+        }
         console.log("Comparing lastUpdateBy to userId: ", value?.data?.updatedGameByID?.lastUpdateBy, props.userId);
         if (value?.data?.updatedGameByID?.lastUpdateBy === props.userId) {
             console.log("Own update, skipping");
+            return;
         }
         else {
             console.log("Updating receivedGameState");

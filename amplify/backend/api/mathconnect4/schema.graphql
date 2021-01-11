@@ -16,11 +16,11 @@ type Game @model
   lastUpdateBy: String # randomized ID per session
 }
 
-type Mutation {
-  customUpdateGame(id: ID! roomCode: String currBoard: [Int] activeSquares: [String] moveCount: Int currMoves: [Int] gameType: String playerIDs: [String] xUsername: String oUsername: String winner: String winSquares: [Int] currPlayer: String lastUpdateBy: String): Game!
-}
+# type Mutation {
+#   customUpdateGame(id: ID! roomCode: String currBoard: [Int] activeSquares: [String] moveCount: Int currMoves: [Int] gameType: String playerIDs: [String] xUsername: String oUsername: String winner: String winSquares: [Int] currPlayer: String lastUpdateBy: String): Game!
+# }
 
 type Subscription {
-    updatedGameByID(id: ID!): Game
-    @aws_subscribe(mutations: ["customUpdateGame"])
+    updatedGameByID(roomCode: String!): Game
+    @aws_subscribe(mutations: ["updateGame"])
 }
